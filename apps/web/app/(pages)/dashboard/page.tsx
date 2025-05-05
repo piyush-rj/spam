@@ -1,11 +1,10 @@
-import Dashboard from "../../src/Dashboard"
+import Dashboard from "../../src/Components/Dashboard";
 
 export default function Page() {
-  
 
 
   return (
-    <div className='min-h-screen bg-[#151424]'>
+    <div className='min-h-screen'>
       <Dashboard/>
     </div>
   )

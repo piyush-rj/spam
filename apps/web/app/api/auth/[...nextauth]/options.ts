@@ -1,28 +1,26 @@
 import GoogleProvider from "next-auth/providers/google";
-import { type AuthOptions } from "next-auth";
+import { ISODateString, type AuthOptions } from "next-auth";
+import prisma from "@repo/db/client"
+import jwt from "jsonwebtoken"
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      fullName?: string | null;
-      email?: string | null;
-      image?: string | null;
-    };
-  }
 
-  interface JWT {
-    id: string;
-  }
+export interface UserType {
+  id: string;
+  fullName?: string | null;
+  email?: string | null;
+  image?: string | null;
+  token?: string | null;
 }
 
+export interface CustomSession {
+  user?: UserType;
+  expires: ISODateString;
+}
+
+
 export const authOptions: AuthOptions = {
-  session: {
-    strategy: "jwt",
-  },
   pages: {
-    signIn: "/auth/signin",
-    signOut: "/auth/signin",
+    signIn: "/",
   },
   providers: [
     GoogleProvider({
@@ -34,42 +32,73 @@ export const authOptions: AuthOptions = {
     async signIn({ user }) {
       try {
         if (!user.email || !user.id) return false;
-
-        const response = await fetch("http://localhost:8080/api/auth/oauth", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            oauthId: user.id,
-            name: user.name || "Anonymous",
-            email: user.email,
-            image: user.image || "",
-          }),
+  
+        const existingUser = await prisma.user.findFirst({
+          where: { email: user.email }
         });
-
-        if (!response.ok) {
-          console.error("Failed to sync user with backend.");
-          return false;
+  
+        let myUser;
+        if (existingUser) {
+          myUser = await prisma.user.update({
+            where: { email: user.email },
+            data: {
+              name: user.name,
+              image: user.image,
+            }
+          });
+        } else {
+          myUser = await prisma.user.create({
+            data: {
+              email: user.email,
+              name: user.name,
+              image: user.image,
+            }
+          });
         }
-
+  
+        const jwtPayload = {
+          name: myUser.name,
+          email: myUser.email,
+          id: myUser.id
+        };
+  
+        const token = jwt.sign(jwtPayload, process.env.JWT_SECRET || "iambatman", { expiresIn: "365d" });
+  
+        user.id = myUser.id.toString();
+        (user as any).token = token;
         return true;
+  
       } catch (err) {
-        console.error("Error during signIn callback:", err);
+        console.error(err);
         return false;
       }
     },
+  
     async jwt({ token, user }) {
-      if (user) token.id = user.id;
+      if (user) {
+        const customUser: UserType = {
+          id: user.id,
+          fullName: user.name,
+          email: user.email,
+          image: user.image,
+          token: (user as any).token,
+        };
+        token.user = customUser;
+      }
       return token;
     },
+  
     async session({ session, token }) {
-      if (session.user) session.user.id = token.id as string;
+      if (token.user) {
+        session.user = token.user as UserType;
+      }
       return session;
     },
+  
     async redirect({ url, baseUrl }) {
       return url.includes("/signin") || url.includes("/signout")
         ? url
         : `${baseUrl}/dashboard`;
     },
-  },
-  secret: process.env.NEXTAUTH_SECRET || "secret",
+  }
 };

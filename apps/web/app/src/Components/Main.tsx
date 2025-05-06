@@ -1,7 +1,7 @@
 "use client"
-import { useRouter } from "next/router"
+import { useRouter } from "next/navigation"
 
-export default function Dashboard(){
+export default function Main(){
     const router = useRouter()
 
     return <button onClick={() => {

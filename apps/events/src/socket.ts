@@ -1,20 +1,19 @@
-import WebSocket, { Server, WebSocketServer } from "ws"
-import { WebSocketMessage, WebSocketType } from "../types/WebSocketTypes";
+import WebSocket, { WebSocketServer } from "ws"
+import { WebSocketMessage, WebSocketType } from "./types/SocketTypes";
 import { error } from "console";
+import { Server } from "http"
 
 
 export class WebSocketClass {
 
     private wss: WebSocketServer;
     private wsSubscription: Map<String, Set<WebSocket>>;
-    // < room1, <user1, user2, ...> >
-    // < <very personal, <gunnu, sinu, anjan> >, <funtoosh collection, < piyush, anjan, nayan >> >
 
     constructor (server: Server) {
-        this.wss = new WebSocketServer();
+        this.wss = new WebSocketServer({ server });
         this.wsSubscription = new Map<string, Set<WebSocket>>();
 
-        this.init;
+        this.init();
     }
 
 

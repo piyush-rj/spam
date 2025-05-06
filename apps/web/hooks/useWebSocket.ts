@@ -1,148 +1,84 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from "react";
 import { WebSocketMessage, WebSocketType } from "../types/WebSocketTypes";
 
-type UseWebSocketProps = {
-  url: string;
-  roomId?: string;
-  autoConnect?: boolean;
-  autoSubscribe?: boolean;
-  onMessage?: (message: WebSocketMessage) => void;
-};
 
-type WebSocketStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
-
-export const useWebSocket = ({
-  url,
-  roomId,
-  autoConnect = true,
-  autoSubscribe = false,
-  onMessage
-}: UseWebSocketProps) => {
-  const [socket, setSocket] = useState<WebSocket | null>(null);
-  const [status, setStatus] = useState<WebSocketStatus>('disconnected');
-  const [error, setError] = useState<Error | null>(null);
+export function useWebSocket(userId: string){
+  const socketRef = useRef<WebSocket | null>(null);
+  const [connected, setConnected] = useState<boolean>(false);
   const [messages, setMessages] = useState<WebSocketMessage[]>([]);
-  const [subscribedRooms, setSubscribedRooms] = useState<string[]>([]);
+  const [currentRoomId, setCurrentRoomId] = useState<string | null>(null)
 
-  // connect to ws
-  const connect = useCallback(() => {
-    if (socket) return;
 
-    try {
-      const ws = new WebSocket(url);
-      
-      ws.onopen = () => {
-        setSocket(ws);
-        setStatus('connected');
-        setError(null);
-        
-        if (autoSubscribe && roomId) {
-          subscribe(roomId);
-        }
-      };
-      
-      ws.onmessage = (event) => {
-        try {
-          const data: WebSocketMessage = JSON.parse(event.data);
-          setMessages(prev => [...prev, data]);
-          if (onMessage) onMessage(data);
-        } catch (err) {
-          console.error('Failed to parse message:', err);
-        }
-      };
-      
-      ws.onerror = () => {
-        setStatus('error');
-        setError(new Error('WebSocket connection error'));
-      };
-      
-      ws.onclose = () => {
-        setStatus('disconnected');
-        setSocket(null);
-      };
-    } catch (err) {
-      setStatus('error');
-      setError(err instanceof Error ? err : new Error('Unknown WebSocket error'));
-    }
-  }, [url, socket, autoSubscribe, roomId, onMessage]);
-
-  // disconnect from ws
-  const disconnect = useCallback(() => {
-    if (!socket) return;
-    
-    socket.close();
-    setSocket(null);
-    setStatus('disconnected');
-    setSubscribedRooms([]);
-  }, [socket]);
-
-  // sub to a room
-  const subscribe = useCallback((roomId: string) => {
-    if (!socket || status !== 'connected') return;
-    
-    const message: WebSocketMessage = {
-      type: WebSocketType.subscribe,
-      roomId
-    };
-    
-    socket.send(JSON.stringify(message));
-    setSubscribedRooms(prev => [...prev.filter(id => id !== roomId), roomId]);
-  }, [socket, status]);
-
-  // unsub from a room
-  const unsubscribe = useCallback((roomId: string) => {
-    if (!socket || status !== 'connected') return;
-    
-    const message: WebSocketMessage = {
-      type: WebSocketType.unsubscribe,
-      roomId
-    };
-    
-    socket.send(JSON.stringify(message));
-    setSubscribedRooms(prev => prev.filter(id => id !== roomId));
-  }, [socket, status]);
-
-  // send msg
-  const sendMessage = useCallback((roomId: string, message: string, senderId: string) => {
-    if (!socket || status !== 'connected') return false;
-    
-    const chatMessage: WebSocketMessage = {
-      type: WebSocketType.chat,
-      roomId,
-      payload: {
-        message,
-        timeStamp: new Date(),
-        senderId
-      }
-    };
-    
-    socket.send(JSON.stringify(chatMessage));
-    return true;
-  }, [socket, status]);
-
-  // auto-connect
   useEffect(() => {
-    if (autoConnect) {
-      connect();
+    const socket = new WebSocket("ws://localhost:8080");
+    socketRef.current = socket;
+
+    socket.onopen = () => {
+      setConnected(true)
+      console.log("Websocket connected")
     }
-    
-    return () => {
-      if (socket) {
-        socket.close();
+
+    socket.onmessage = (event) => {
+      const messages: WebSocketMessage = JSON.parse(event.data);
+      if ( messages.type == "chat" ) {
+        setMessages((prev) => [...prev, messages])
       }
-    };
-  }, [autoConnect, connect, socket]);
+    }
+
+    socket.onclose = () => {
+      setConnected(false)
+      console.log("websocket disconnected")
+    }
+
+    return () => {
+      socket.close()
+    }
+  }, [])
+
+
+  const joinRoom = useCallback((roomId: string) => {
+    if (socketRef.current && connected) {
+      const payload = { type: "subscribe", roomId}
+      socketRef.current?.send(JSON.stringify(payload))
+      setCurrentRoomId(roomId)
+    }
+  }, [connected])
+
+  
+  const leaveRoom = useCallback(() => {
+    if (socketRef.current && connected && currentRoomId) {
+      const payload = { type: "unsubscribe", roomId: currentRoomId }
+      socketRef.current.send(JSON.stringify(payload))
+      setCurrentRoomId(null)
+    }
+  }, [connected, currentRoomId])
+  
+  
+  const sendMessage = useCallback((text: string) => {
+    if (socketRef.current && connected && currentRoomId) {
+      const payload: WebSocketMessage = {
+        type: WebSocketType.chat,
+        roomId: currentRoomId,
+        payload: {
+          message: text,
+          timeStamp: new Date(),
+          senderId: userId
+        }
+      };
+      
+    }
+  }, [connected, currentRoomId, userId])
 
   return {
-    status,
-    error,
+    connected,
     messages,
-    subscribedRooms,
-    connect,
-    disconnect,
-    subscribe,
-    unsubscribe,
+    joinRoom,
+    leaveRoom,
     sendMessage,
-    isConnected: status === 'connected'
-  };
-};
+    currentRoomId
+  }
+
+}
+
+
+

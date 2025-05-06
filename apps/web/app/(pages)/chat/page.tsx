@@ -1,59 +1,157 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useWebSocket } from "../../../hooks/useWebSocket";
-import ChatRoom from '../../src/Components/ChatRoom';
-import RoomSelector from '../../src/Components/RoomSelector';
-import { WebSocketMessage } from "../../types/WebSocketTypes";
-import { getServerSession } from 'next-auth';
+import { useState } from 'react';
+import { useWebSocket } from '../../../hooks/useWebSocket'; 
+import { WebSocketType } from '../../../types/WebSocketTypes';
+import { WebSocketMessage } from '../../types/WebSocketTypes';
 
-export default function ChatPage() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const roomId = searchParams.get('roomId');
-    const [userId] = useState(`user-${Math.floor(Math.random() * 10000)}`);
-    const [activeRoom, setActiveRoom] = useState<string | null>(roomId);
+export default function Chat() {
+  const [roomId, setRoomId] = useState('');
+  const [userId, setUserId] = useState('');
+  const [inputMsg, setInputMsg] = useState('');
+  const [joined, setJoined] = useState(false);
 
+  const {
+    status,
+    messages,
+    connect,
+    disconnect,
+    subscribe,
+    unsubscribe,
+    sendMessage,
+    isConnected,
+  } = useWebSocket({
+    url: 'http://localhost:8080',
+    autoConnect: true,
+    autoSubscribe: false,
+    onMessage: (msg) => console.log('Message received:', msg),
+  });
 
-  const handleJoinRoom = (roomId: string) => {
-    router.push(`/chat?roomId=${roomId}`);
-    setActiveRoom(roomId);
+  const handleJoin = () => {
+    if (roomId && isConnected) {
+      subscribe(roomId);
+      setJoined(true);
+    }
   };
 
-  
-  const handleCreateRoom = () => {
-    const newRoomId = `room-${Math.floor(Math.random() * 100000)}`;
-    router.push(`/chat?roomId=${newRoomId}`);
-    setActiveRoom(newRoomId);
+  const handleLeave = () => {
+    if (roomId && isConnected) {
+      unsubscribe(roomId);
+      setJoined(false);
+    }
   };
 
-  
-  const handleLeaveRoom = () => {
-    router.push('/chat');
-    setActiveRoom(null);
+  const handleSend = () => {
+    if (roomId && inputMsg && userId) {
+      sendMessage(roomId, inputMsg, userId);
+      setInputMsg('');
+    }
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900 text-gray-100">
-      <header className="bg-gray-800 border-b border-gray-700 p-4">
-        <div className="container mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold text-indigo-400">Baatein</h1>
-          <div className="text-sm text-gray-400">Connected as: {userId}</div>
-        </div>
-      </header>
+    <div style={styles.container}>
+      <h1 style={styles.title}>WebSocket Chat</h1>
 
-      <main className="flex flex-1 container mx-auto p-4">
-        {activeRoom ? (
-          <ChatRoom roomId={activeRoom} userId={userId} onLeave={handleLeaveRoom} />
-        ) : (
-          <RoomSelector onJoin={handleJoinRoom} onCreate={handleCreateRoom} />
-        )}
-      </main>
-      
-      <footer className="bg-gray-800 border-t border-gray-700 p-3 text-center text-sm text-gray-500">
-        Real-time WebSocket Chat - {new Date().getFullYear()}
-      </footer>
+      <div style={styles.inputGroup}>
+        <input
+          style={styles.input}
+          placeholder="Room ID"
+          value={roomId}
+          onChange={(e) => setRoomId(e.target.value)}
+        />
+        <input
+          style={styles.input}
+          placeholder="User ID"
+          value={userId}
+          onChange={(e) => setUserId(e.target.value)}
+        />
+        <button style={styles.button} onClick={handleJoin} disabled={!roomId || !userId || joined}>
+          Join Room
+        </button>
+        <button style={styles.button} onClick={handleLeave} disabled={!joined}>
+          Leave Room
+        </button>
+      </div>
+
+      <div style={styles.chatBox}>
+      {messages
+      .filter((msg) => msg.roomId === roomId && msg.type === WebSocketType.chat)
+      .map((msg, idx) => {
+        const chatMsg = msg as Extract<WebSocketMessage, { type: WebSocketType.chat }>;
+        return (
+          <div key={idx} style={styles.chatMsg}>
+            <strong>{chatMsg.payload.senderId}:</strong> {chatMsg.payload.message}
+          </div>
+      );
+    })}
+
+      </div>
+
+      <div style={styles.inputGroup}>
+        <input
+          style={styles.input}
+          placeholder="Message"
+          value={inputMsg}
+          onChange={(e) => setInputMsg(e.target.value)}
+        />
+        <button style={styles.button} onClick={handleSend} disabled={!joined || !inputMsg}>
+          Send
+        </button>
+      </div>
+
+      <div style={{ marginTop: 10, fontSize: 14 }}>
+        Status: <strong>{status}</strong>
+      </div>
     </div>
   );
 }
+
+const styles: { [key: string]: React.CSSProperties } = {
+  container: {
+    maxWidth: '600px',
+    margin: '40px auto',
+    padding: 20,
+    background: '#1e1e1e',
+    color: '#fff',
+    borderRadius: 8,
+    boxShadow: '0 0 10px rgba(0,0,0,0.4)',
+    fontFamily: 'Arial, sans-serif',
+  },
+  title: {
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  inputGroup: {
+    display: 'flex',
+    gap: 10,
+    marginBottom: 10,
+  },
+  input: {
+    flex: 1,
+    padding: 8,
+    borderRadius: 4,
+    border: '1px solid #444',
+    background: '#2e2e2e',
+    color: '#fff',
+  },
+  button: {
+    padding: '8px 12px',
+    background: '#0070f3',
+    color: '#fff',
+    border: 'none',
+    borderRadius: 4,
+    cursor: 'pointer',
+  },
+  chatBox: {
+    background: '#111',
+    border: '1px solid #333',
+    borderRadius: 4,
+    height: '200px',
+    overflowY: 'auto',
+    padding: 10,
+    marginBottom: 10,
+  },
+  chatMsg: {
+    padding: '4px 0',
+  },
+};

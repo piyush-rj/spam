@@ -1,11 +1,12 @@
-import Dashboard from "../../src/Components/Dashboard";
+"use client"
+import Main from "../../src/Components/Main";
 
 export default function Page() {
 
 
   return (
     <div className='min-h-screen'>
-      <Dashboard/>
+      <Main/>
     </div>
   )
 

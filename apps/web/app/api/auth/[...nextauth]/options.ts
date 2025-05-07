@@ -1,21 +1,40 @@
 import GoogleProvider from "next-auth/providers/google";
-import { ISODateString, type AuthOptions } from "next-auth";
+import { ISODateString, User, type AuthOptions } from "next-auth";
 import prisma from "@repo/db/client"
 import jwt from "jsonwebtoken"
 
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      fullName?: string | null;
+      email?: string | null;
+      image?: string | null;
+      token?: string | null;
+    };
+  }
 
-export interface UserType {
-  id: string;
-  fullName?: string | null;
-  email?: string | null;
-  image?: string | null;
-  token?: string | null;
+  interface User {
+    id: string;
+    fullName?: string | null;
+    email?: string | null;
+    image?: string | null;
+    token?: string | null;
+  }
 }
 
-export interface CustomSession {
-  user?: UserType;
-  expires: ISODateString;
+declare module "next-auth/jwt" {
+  interface JWT {
+    user?: {
+      id: string;
+      fullName?: string | null;
+      email?: string | null;
+      image?: string | null;
+      token?: string | null;
+    };
+  }
 }
+
 
 
 export const authOptions: AuthOptions = {
@@ -76,7 +95,7 @@ export const authOptions: AuthOptions = {
   
     async jwt({ token, user }) {
       if (user) {
-        const customUser: UserType = {
+        const customUser: User = {
           id: user.id,
           fullName: user.name,
           email: user.email,
@@ -90,7 +109,7 @@ export const authOptions: AuthOptions = {
   
     async session({ session, token }) {
       if (token.user) {
-        session.user = token.user as UserType;
+        session.user = token.user as User;
       }
       return session;
     },

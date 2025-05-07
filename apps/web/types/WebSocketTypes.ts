@@ -1,5 +1,3 @@
-// WebSocketTypes.ts
-
 export enum WebSocketType {
     chat = "chat",
     subscribe = "subscribe",
@@ -10,8 +8,14 @@ export enum WebSocketType {
   
   export interface ChatPayload {
     message: string;
-    timeStamp: Date;
+    timeStamp: string;
     senderId: string;
+  }
+  
+  export interface User {
+    userId: string;
+    userName: string;
+    joinedAt?: string;
   }
   
   export type WebSocketMessage =
@@ -23,7 +27,10 @@ export enum WebSocketType {
     | {
         type: WebSocketType.subscribe | WebSocketType.unsubscribe;
         roomId: string;
-        payload?: undefined;
+        payload?: {
+          userId?: string;
+          userName?: string;
+        };
       }
     | {
         type: WebSocketType.userUpdate;
@@ -31,6 +38,7 @@ export enum WebSocketType {
         payload: {
           userCount: number;
           users?: User[];
+          currentUser?: User;
         };
       }
     | {
@@ -38,12 +46,5 @@ export enum WebSocketType {
         roomId: string;
         payload: {
           users: User[];
-        };
-      };
-  
-  export interface User {
-    userId: string;
-    userName: string;
-    joinedAt?: Date;
-  }
-  
+    };
+};    

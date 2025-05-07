@@ -27,33 +27,49 @@ export class WebSocketClass {
     }
 
     private cleanupSocket(socket: WebSocket) {
+        // Track which rooms this socket was in
+        const affectedRooms = new Set<string>();
+        
         for (const [roomId, sockets] of this.wsSubscription.entries()) {
             if (sockets.has(socket)) {
                 sockets.delete(socket);
-                this.wsUserMap.delete(socket);
+                affectedRooms.add(roomId);
                 console.log(`Socket disconnected from room ${roomId}`);
 
                 if (sockets.size === 0) {
                     this.wsSubscription.delete(roomId);
-                } else {
-                    this.broadcastUserCount(roomId);
                 }
             }
         }
+        
+        // Remove user from the user map
+        this.wsUserMap.delete(socket);
+        
+        // Update user lists for each affected room
+        affectedRooms.forEach(roomId => {
+            this.broadcastUserList(roomId);
+            this.broadcastUserCount(roomId);
+        });
     }
 
     private handleMessage(message: string, socket: WebSocket) {
-        const socketMessage: WebSocketMessage = JSON.parse(message);
+        try {
+            const socketMessage: WebSocketMessage = JSON.parse(message);
 
-        switch (socketMessage.type) {
-            case WebSocketType.subscribe:
-                return this.handleJoin(socketMessage, socket);
-            case WebSocketType.unsubscribe:
-                return this.handleLeave(socketMessage, socket);
-            case WebSocketType.chat:
-                return this.handleChat(socketMessage, socket);
-            default:
-                return;
+            switch (socketMessage.type) {
+                case WebSocketType.subscribe:
+                    return this.handleJoin(socketMessage, socket);
+                case WebSocketType.unsubscribe:
+                    return this.handleLeave(socketMessage, socket);
+                case WebSocketType.chat:
+                    return this.handleChat(socketMessage, socket);
+                case WebSocketType.userUpdate:
+                    return this.sendUserList(socketMessage.roomId, socket);
+                default:
+                    return;
+            }
+        } catch (error) {
+            this.handleError(error);
         }
     }
 
@@ -62,21 +78,50 @@ export class WebSocketClass {
             const roomId = subscribeMessage.roomId;
             if (!roomId) throw new Error("Missing roomId");
 
+            // Parse user information from the subscribe message payload
+            let user = this.wsUserMap.get(socket);
+            
+            // If user info was provided in the payload, use it
+            if (subscribeMessage.payload && 'userId' in subscribeMessage.payload && 'userName' in subscribeMessage.payload) {
+                user = {
+                    userId: subscribeMessage.payload.userId as string,
+                    userName: subscribeMessage.payload.userName as string,
+                    joinedAt: new Date().toISOString()
+                };
+            } 
+            // otherwise generate default user info
+            else if (!user) {
+                user = {
+                    userId: Math.random().toString(36).substring(2, 10),
+                    userName: `User-${Math.floor(Math.random() * 1000)}`,
+                    joinedAt: new Date().toISOString()
+                };
+            }
+            
+            // Update or add the user in the map
+            this.wsUserMap.set(socket, user);
+
+            // Add socket to the room
             if (!this.wsSubscription.has(roomId)) {
                 this.wsSubscription.set(roomId, new Set<WebSocket>());
             }
-
             this.wsSubscription.get(roomId)?.add(socket);
 
-            // Mock user — ideally you should receive this from client payload or use token-based auth
-            const user: User = {
-                userId: Math.random().toString(36).substring(2, 10),
-                userName: `User-${Math.floor(Math.random() * 1000)}`,
-                joinedAt: new Date(),
+            console.log(`User ${user.userName} (${user.userId}) subscribed to room ${roomId}`);
+            
+            // Send the user their own user info
+            const userInfoMessage: WebSocketMessage = {
+                type: WebSocketType.userUpdate,
+                roomId,
+                payload: {
+                    userCount: 1,
+                    currentUser: user
+                }
             };
-            this.wsUserMap.set(socket, user);
-
-            console.log(`User subscribed to room ${roomId}`);
+            socket.send(JSON.stringify(userInfoMessage));
+            
+            // Broadcast user list and count to all users in the room
+            this.broadcastUserList(roomId);
             this.broadcastUserCount(roomId);
         } catch (error) {
             this.handleError(error);
@@ -111,14 +156,21 @@ export class WebSocketClass {
             const roomId = unsubscribeMessage.roomId;
             if (!roomId) return;
 
-            this.wsSubscription.get(roomId)?.delete(socket);
-            this.wsUserMap.delete(socket);
+            const roomSockets = this.wsSubscription.get(roomId);
+            if (!roomSockets) return;
 
-            if (this.wsSubscription.get(roomId)?.size === 0) {
+            roomSockets.delete(socket);
+            
+            // Don't delete the user from wsUserMap here as they might be in other rooms
+            
+            if (roomSockets.size === 0) {
                 this.wsSubscription.delete(roomId);
             } else {
+                this.broadcastUserList(roomId);
                 this.broadcastUserCount(roomId);
             }
+            
+            console.log(`User left room ${roomId}`);
         } catch (error) {
             return this.handleError(error);
         }
@@ -128,22 +180,59 @@ export class WebSocketClass {
         const sockets = this.wsSubscription.get(roomId);
         if (!sockets) return;
 
-        const users: User[] = Array.from(sockets)
-            .map((s) => this.wsUserMap.get(s))
-            .filter(Boolean) as User[];
-
         const userCountMessage: WebSocketMessage = {
             type: WebSocketType.userUpdate,
             roomId,
             payload: {
-                userCount: users.length,
-                users,
+                userCount: sockets.size
             },
         };
 
         const messageStr = JSON.stringify(userCountMessage);
-        console.log("Users online:", users.length);
+        console.log("Users online in room", roomId, ":", sockets.size);
 
+        sockets.forEach((s) => {
+            s.send(messageStr);
+        });
+    }
+    
+    private sendUserList(roomId: string, socket: WebSocket) {
+        const sockets = this.wsSubscription.get(roomId);
+        if (!sockets) return;
+        
+        const users: User[] = Array.from(sockets)
+            .map((s) => this.wsUserMap.get(s))
+            .filter(Boolean) as User[];
+            
+        const userListMessage: WebSocketMessage = {
+            type: WebSocketType.userList,
+            roomId,
+            payload: {
+                users
+            }
+        };
+        
+        socket.send(JSON.stringify(userListMessage));
+    }
+    
+    private broadcastUserList(roomId: string) {
+        const sockets = this.wsSubscription.get(roomId);
+        if (!sockets) return;
+        
+        const users: User[] = Array.from(sockets)
+            .map((s) => this.wsUserMap.get(s))
+            .filter(Boolean) as User[];
+            
+        const userListMessage: WebSocketMessage = {
+            type: WebSocketType.userList,
+            roomId,
+            payload: {
+                users
+            }
+        };
+        
+        const messageStr = JSON.stringify(userListMessage);
+        
         sockets.forEach((s) => {
             s.send(messageStr);
         });

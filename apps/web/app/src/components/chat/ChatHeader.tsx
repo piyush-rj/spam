@@ -1,77 +1,49 @@
-// ChatHeader (Updated)
-"use client";
-import React, { useState } from 'react';
-import { Moon, Menu, User, Users } from 'lucide-react';
-import { StatusBadge } from './Status';
-import { MobileMenu } from './MobileMenu';
+"use client"
+import React from 'react';
+import { AppHeaderProps } from '../../../../types/ChatTypes';
 
-interface ChatHeaderProps {
-  connected: boolean;
-  currentRoomId: string | null;
-  userName: string;
-  userCount: number;
-  onToggleUsersList: () => void;
-}
-
-export const ChatHeader: React.FC<ChatHeaderProps> = ({
-  connected,
-  currentRoomId,
-  userName,
-  userCount,
-  onToggleUsersList
+const ChatHeader: React.FC<AppHeaderProps> = ({ 
+  connected, 
+  userName, 
+  userAvatar, 
+  isAuthenticated 
 }) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
   return (
-    <header className="bg-gray-800 shadow-md">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Moon className="text-indigo-400" size={24} />
-          <h1 className="font-bold text-xl">NightChat</h1>
-        </div>
+    <header className="bg-gray-800 p-4 shadow-lg border-b border-gray-700">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-200 to-gray-500 bg-clip-text text-transparent">NightChat</h1>
         
-        <div className="hidden md:flex items-center space-x-2">
-          <StatusBadge connected={connected} />
-          
-          {currentRoomId && (
-            <div className="bg-indigo-900/50 px-3 py-1 rounded-full flex items-center justify-between min-w-32">
-              <div className="flex items-center">
-                <Users size={14} className="mr-2" />
-                <span className="text-sm">Room: {currentRoomId}</span>
-              </div>
-              <span
-                className="ml-2 text-xs bg-indigo-800 px-2 rounded-full cursor-pointer hover:bg-indigo-700"
-                onClick={onToggleUsersList}
-              >
-                {userCount} online
-              </span>
-
-            </div>
+        <div className="flex items-center gap-3">
+          {connected ? (
+            <span className="flex items-center gap-2">
+              <span className="h-2 w-2 bg-green-500 rounded-full"></span>
+              <span className="text-sm text-green-500">Connected</span>
+            </span>
+          ) : (
+            <span className="flex items-center gap-2">
+              <span className="h-2 w-2 bg-red-500 rounded-full"></span>
+              <span className="text-sm text-red-500">Disconnected</span>
+            </span>
           )}
           
-          <div className="bg-gray-700 px-3 py-1 rounded-full flex items-center">
-            <User size={14} className="mr-2" />
-            <span className="text-sm">{userName}</span>
-          </div>
+          {isAuthenticated ? (
+            <div className="flex items-center gap-2">
+              {userAvatar && (
+                <img 
+                  src={userAvatar} 
+                  alt={userName} 
+                  className="h-8 w-8 rounded-full border border-gray-600" 
+                />
+              )}
+              <span className="text-sm font-medium">{userName}</span>
+            </div>
+          ) : (
+            <span className="text-sm font-medium text-gray-400">Guest User</span>
+          )}
         </div>
-        
-        <button 
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden text-gray-400 hover:text-white cursor-pointer"
-        >
-          <Menu size={24} />
-        </button>
       </div>
-      
-      {/* Mobile menu */}
-      {mobileMenuOpen && (
-        <MobileMenu
-          connected={connected}
-          currentRoomId={currentRoomId}
-          userName={userName}
-          userCount={userCount}
-        />
-      )}
     </header>
   );
 };
+
+export default ChatHeader;

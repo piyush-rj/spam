@@ -1,27 +1,19 @@
-"use client";
-import { useSession } from "next-auth/react";
-import { useWebSocket } from "../../../../hooks/useWebSocket";
-import { ChatLayout } from "./ChatLayout";
-import { User } from "lucide-react";
+"use client"
+import React from 'react';
+import { useSession } from 'next-auth/react';
+import { useWebSocket } from '../../../../hooks/useWebSocket';
+import JoinRoom from '../chat/JoinRoom';
+import ChatContainer from '../chat/ChatContainer';
+import ChatHeader from '../chat/ChatHeader';
 
-export default function ChatPage() {
-  const { data: session } = useSession();
+const ChatApp: React.FC = () => {
+  const { data: session, status } = useSession();
+  const isAuthenticated = status === 'authenticated';
   
-  if (!session?.user?.id) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-gray-900">
-        <div className="text-center p-8 bg-gray-800 rounded-lg shadow-lg">
-          <User size={48} className="mx-auto text-gray-400 mb-4" />
-          <h2 className="text-xl text-gray-100 font-medium">User not found</h2>
-          <p className="text-gray-400 mt-2">Please sign in to continue</p>
-        </div>
-      </div>
-    );
-  }
-
-  const userId = session.user.id;
-  const userName = session.user.fullName || "Anonymous";
-
+  const userId = session?.user?.id || 'guest-' + Math.random().toString(36).substring(2, 10);
+  const userName = session?.user?.fullName || 'Guest User';
+  const userAvatar = session?.user?.image || null;
+  
   const {
     connected,
     messages,
@@ -29,20 +21,40 @@ export default function ChatPage() {
     leaveRoom,
     sendMessage,
     currentRoomId,
-    userCount 
-  } = useWebSocket(userId);
+    userCount,
+    users,
+    currentUser
+  } = useWebSocket({
+    userId,
+    userName
+  });
 
   return (
-    <ChatLayout
-      userId={userId}
-      userName={userName}
-      connected={connected}
-      messages={messages}
-      userCount={userCount}
-      currentRoomId={currentRoomId}
-      onJoinRoom={joinRoom}
-      onLeaveRoom={leaveRoom}
-      onSendMessage={sendMessage}
-    />
+    <div className="flex flex-col h-screen bg-gray-900 text-gray-100">
+      <ChatHeader
+        connected={connected}
+        userName={userName}
+        userAvatar={userAvatar}
+        isAuthenticated={isAuthenticated}
+      />
+      
+      <div className="flex-1 flex h-full">
+        {!currentRoomId ? (
+          <JoinRoom onJoinRoom={joinRoom} isConnected={connected} />
+        ) : (
+          <ChatContainer
+            roomId={currentRoomId}
+            messages={messages}
+            users={users}
+            userCount={userCount}
+            currentUserId={userId}
+            onSendMessage={sendMessage}
+            onLeaveRoom={leaveRoom}
+          />
+        )}
+      </div>
+    </div>
   );
-}
+};
+
+export default ChatApp;

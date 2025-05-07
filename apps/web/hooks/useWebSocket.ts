@@ -1,16 +1,27 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { User, WebSocketMessage, WebSocketType } from "../types/WebSocketTypes";
 
-export function useWebSocket(userId: string) {
+interface UseWebSocketOptions {
+  userId: string;
+  userName?: string;
+  serverUrl?: string;
+}
+
+export function useWebSocket({ userId, userName = `User-${Math.floor(Math.random() * 1000)}`, serverUrl = "ws://localhost:8080" }: UseWebSocketOptions) {
   const socketRef = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
   const [messages, setMessages] = useState<WebSocketMessage[]>([]);
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
-  const [userCount, setUserCount] = useState<number>(0); 
-  const [users, setUsers] = useState<User[]>([])
+  const [userCount, setUserCount] = useState<number>(0);
+  const [users, setUsers] = useState<User[]>([]);
+  const [currentUser, setCurrentUser] = useState<User>({
+    userId,
+    userName,
+    joinedAt: new Date().toISOString()
+  });
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:8080");
+    const socket = new WebSocket(serverUrl);
     socketRef.current = socket;
 
     socket.onopen = () => {
@@ -20,6 +31,7 @@ export function useWebSocket(userId: string) {
 
     socket.onmessage = (event) => {
       const message: WebSocketMessage = JSON.parse(event.data);
+      console.log("Received message:", message);
 
       switch (message.type) {
         case WebSocketType.chat:
@@ -27,11 +39,20 @@ export function useWebSocket(userId: string) {
           break;
 
         case WebSocketType.userUpdate:
-          setUserCount(message.payload.userCount);
+          if (message.payload.userCount !== undefined) {
+            setUserCount(message.payload.userCount);
+          }
+          
+          // If this is a user update specifically for this user
+          if (message.payload.currentUser) {
+            setCurrentUser(message.payload.currentUser as User);
+          }
           break;
 
         case WebSocketType.userList:
-          setUsers(message.payload.users)
+          if (message.payload.users) {
+            setUsers(message.payload.users);
+          }
           break;
 
         default:
@@ -45,23 +66,39 @@ export function useWebSocket(userId: string) {
     };
 
     return () => {
+      if (currentRoomId) {
+        leaveRoom();
+      }
       socket.close();
     };
-  }, []);
+  }, [serverUrl]);
 
   const joinRoom = useCallback((roomId: string) => {
     if (socketRef.current && connected) {
-      const payload = { type: "subscribe", roomId };
+      const payload: WebSocketMessage = {
+        type: WebSocketType.subscribe,
+        roomId,
+        payload: {
+          userId,
+          userName
+        }
+      };
       socketRef.current.send(JSON.stringify(payload));
       setCurrentRoomId(roomId);
+      setMessages([]);
     }
-  }, [connected]);
+  }, [connected, userId, userName]);
 
   const leaveRoom = useCallback(() => {
     if (socketRef.current && connected && currentRoomId) {
-      const payload = { type: "unsubscribe", roomId: currentRoomId };
+      const payload: WebSocketMessage = {
+        type: WebSocketType.unsubscribe,
+        roomId: currentRoomId
+      };
       socketRef.current.send(JSON.stringify(payload));
       setCurrentRoomId(null);
+      setUsers([]);
+      setUserCount(0);
     }
   }, [connected, currentRoomId]);
 
@@ -72,13 +109,24 @@ export function useWebSocket(userId: string) {
         roomId: currentRoomId,
         payload: {
           message: text,
-          timeStamp: new Date(),
+          timeStamp: new Date().toISOString(),
           senderId: userId,
         },
       };
       socketRef.current.send(JSON.stringify(payload));
     }
   }, [connected, currentRoomId, userId]);
+
+  const requestUserList = useCallback(() => {
+    if (socketRef.current && connected && currentRoomId) {
+      const payload: WebSocketMessage = {
+        type: WebSocketType.userList,
+        roomId: currentRoomId,
+        payload: { users: [] }
+      };
+      socketRef.current.send(JSON.stringify(payload));
+    }
+  }, [connected, currentRoomId]);
 
   return {
     connected,
@@ -88,6 +136,8 @@ export function useWebSocket(userId: string) {
     sendMessage,
     currentRoomId,
     userCount,
-    users
+    users,
+    currentUser,
+    requestUserList
   };
 }

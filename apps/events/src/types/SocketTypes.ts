@@ -2,40 +2,49 @@ export enum WebSocketType {
     chat = "chat",
     subscribe = "subscribe",
     unsubscribe = "unsubscribe",
-    userUpdate = "user-update" 
+    userUpdate = "user-update",
+    userList = "user-list"
   }
   
-  
-export interface ChatPayload {
+  export interface ChatPayload {
     message: string;
-    timeStamp: Date;
+    timeStamp: string;
     senderId: string;
-}
+  }
   
-export type WebSocketMessage =
-  | {
+  export interface User {
+    userId: string;
+    userName: string;
+    joinedAt?: string;
+  }
+  
+  export type WebSocketMessage =
+    | {
         type: WebSocketType.chat;
         roomId: string;
         payload: ChatPayload;
-    }
-  | {
+      }
+    | {
         type: WebSocketType.subscribe | WebSocketType.unsubscribe;
         roomId: string;
-        payload?: undefined;
-    }
-  | {
+        payload?: {
+          userId?: string;
+          userName?: string;
+        };
+      }
+    | {
         type: WebSocketType.userUpdate;
         roomId: string;
         payload: {
-        userCount: number;
-        users?: User[]; 
+          userCount: number;
+          users?: User[];
+          currentUser?: User;
+        };
+      }
+    | {
+        type: WebSocketType.userList;
+        roomId: string;
+        payload: {
+          users: User[];
     };
-};
-
-
-  
-export interface User {
-    userId: string;
-    userName: string;
-    joinedAt?: Date;
-}
+};    

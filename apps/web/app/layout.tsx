@@ -2,10 +2,8 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "@repo/config/styles"
-import { SessionProvider } from "next-auth/react";
 import ClientProvider from "./src/ClientProvider";
-import Navbar from "./src/components/Dashboard/Navbar";
-import { SignInModalProvider } from "./src/components/Dashboard/landing/SignInProvider";
+import NavbarMain from "./src/components/Dashboard/landing/NavbarMain";
 
 
 const geistSans = localFont({
@@ -31,10 +29,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ClientProvider>
-          <Navbar/>
-          <SignInModalProvider>
+          <NavbarMain />
             {children}
-          </SignInModalProvider>
         </ClientProvider>
       </body>
     </html>

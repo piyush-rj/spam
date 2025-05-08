@@ -117,7 +117,7 @@ export const authOptions: AuthOptions = {
     async redirect({ url, baseUrl }) {
       return url.includes("/signin") || url.includes("/signout")
         ? url
-        : `${baseUrl}/dashboard`;
+        : `${baseUrl}/`;
     },
   }
 };

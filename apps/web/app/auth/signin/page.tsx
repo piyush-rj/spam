@@ -7,9 +7,9 @@ import { Caveat } from "next/font/google";
 
 const caveat = Caveat({ weight: "600" });
 
-export default function SignIn(): JSX.Element {
+export default function SignIn()  {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get("callbackUrl") || "/api/dashboard";
+  const callbackUrl = searchParams.get("callbackUrl") || "/";
   const [isLoading, setIsLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {

@@ -2,24 +2,31 @@
 @tailwind components;
 @tailwind utilities;
 
-body {
-  background-color: #121212;
-  color: #e4e4e4;
+@layer base {
+  body {
+    @apply bg-black text-white antialiased;
+  }
 }
 
-
-
-@keyframes spin-slow {
-    0% {
-      transform: rotate(0deg);
-    }
-    100% {
-      transform: rotate(360deg);
-    }
+@layer components {
+  .container {
+    @apply px-1 mx-auto;
   }
-  
-  .animate-spin-slow {
-    animation: spin-slow 2s linear infinite;
-    transform-origin: center;
+}
+
+@keyframes orbit {
+  0% {
+    transform: rotate(0deg) translateX(150px) rotate(0deg);
   }
-  
+  100% {
+    transform: rotate(360deg) translateX(150px) rotate(-360deg);
+  }
+}
+
+.animate-orbit {
+  animation: orbit 15s linear infinite;
+}
+
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-r from-yellow-400 to-amber-500;
+}

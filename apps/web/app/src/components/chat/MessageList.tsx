@@ -12,17 +12,14 @@ interface MessageListProps {
 const MessageList: React.FC<MessageListProps> = ({ messages, users, currentUserId }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Check if message is from current user
   const isOwnMessage = (senderId: string) => {
     return senderId === currentUserId;
   };
 
-  // Get user name from ID
   const getUserName = (userId: string) => {
     return users.find(u => u.userId === userId)?.userName || 'Unknown User';
   };

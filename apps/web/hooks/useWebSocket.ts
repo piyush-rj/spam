@@ -7,13 +7,19 @@ interface UseWebSocketOptions {
   serverUrl?: string;
 }
 
-export function useWebSocket({ userId, userName = `User-${Math.floor(Math.random() * 1000)}`, serverUrl = "ws://localhost:8080" }: UseWebSocketOptions) {
+export function useWebSocket({ 
+  userId, 
+  userName = `User-${Math.floor(Math.random() * 1000)}`, 
+  serverUrl = "ws://localhost:8080" 
+}: UseWebSocketOptions) {
+
   const socketRef = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
   const [messages, setMessages] = useState<WebSocketMessage[]>([]);
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
   const [userCount, setUserCount] = useState<number>(0);
   const [users, setUsers] = useState<User[]>([]);
+
   const [currentUser, setCurrentUser] = useState<User>({
     userId,
     userName,
@@ -26,12 +32,12 @@ export function useWebSocket({ userId, userName = `User-${Math.floor(Math.random
 
     socket.onopen = () => {
       setConnected(true);
-      console.log("WebSocket connected");
+      console.log("ws connected");
     };
 
     socket.onmessage = (event) => {
       const message: WebSocketMessage = JSON.parse(event.data);
-      console.log("Received message:", message);
+      console.log("received message:", message);
 
       switch (message.type) {
         case WebSocketType.chat:
@@ -43,7 +49,6 @@ export function useWebSocket({ userId, userName = `User-${Math.floor(Math.random
             setUserCount(message.payload.userCount);
           }
           
-          // If this is a user update specifically for this user
           if (message.payload.currentUser) {
             setCurrentUser(message.payload.currentUser as User);
           }
@@ -56,13 +61,13 @@ export function useWebSocket({ userId, userName = `User-${Math.floor(Math.random
           break;
 
         default:
-          console.warn("Unknown message type:", message.type);
+          console.log("Unknown message type:", message.type);
       }
     };
 
     socket.onclose = () => {
       setConnected(false);
-      console.log("WebSocket disconnected");
+      console.log("ws disconnected");
     };
 
     return () => {
@@ -72,6 +77,7 @@ export function useWebSocket({ userId, userName = `User-${Math.floor(Math.random
       socket.close();
     };
   }, [serverUrl]);
+
 
   const joinRoom = useCallback((roomId: string) => {
     if (socketRef.current && connected) {
@@ -89,6 +95,7 @@ export function useWebSocket({ userId, userName = `User-${Math.floor(Math.random
     }
   }, [connected, userId, userName]);
 
+
   const leaveRoom = useCallback(() => {
     if (socketRef.current && connected && currentRoomId) {
       const payload: WebSocketMessage = {
@@ -101,6 +108,7 @@ export function useWebSocket({ userId, userName = `User-${Math.floor(Math.random
       setUserCount(0);
     }
   }, [connected, currentRoomId]);
+
 
   const sendMessage = useCallback((text: string) => {
     if (socketRef.current && connected && currentRoomId) {
@@ -117,6 +125,7 @@ export function useWebSocket({ userId, userName = `User-${Math.floor(Math.random
     }
   }, [connected, currentRoomId, userId]);
 
+
   const requestUserList = useCallback(() => {
     if (socketRef.current && connected && currentRoomId) {
       const payload: WebSocketMessage = {
@@ -127,6 +136,7 @@ export function useWebSocket({ userId, userName = `User-${Math.floor(Math.random
       socketRef.current.send(JSON.stringify(payload));
     }
   }, [connected, currentRoomId]);
+  
 
   return {
     connected,

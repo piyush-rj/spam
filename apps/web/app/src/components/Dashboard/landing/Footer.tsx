@@ -43,51 +43,65 @@ const socialLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-black border-t border-yellow-500/10">
-      <div className="container mx-auto px-4 py-12 max-w-7xl">
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-8 mb-10">
-          <div className="col-span-2 md:col-span-3">
-            <div className="flex items-center space-x-2 mb-6">
-              <div className="w-6 h-6 rounded-full flex items-center justify-center -mr-[4px]">
-                <span className="text-black font-bold">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e4e4e4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-orbit">
-                    <path d="M20.341 6.484A10 10 0 0 1 10.266 21.85" />
-                    <path d="M3.659 17.516A10 10 0 0 1 13.74 2.152" />
-                    <circle cx="12" cy="12" r="3" />
-                    <circle cx="19" cy="5" r="2" />
-                    <circle cx="5" cy="19" r="2" />
-                  </svg>
-                </span>
+    <footer className="bg-black py-12 flex justify-center items-center">
+      <div className="max-w-7xl w-full mx-auto">
+        <div 
+          className="bg-cover bg-center relative rounded-3xl overflow-hidden"
+          style={{ backgroundImage: "url('/eclipse.jpeg')" }}
+        >
+          <div className="absolute inset-0 bg-black bg-opacity-40"></div>
+          
+          <div className="relative px-6 md:px-12">
+            <div className=" mx-8"></div>
+            
+            <div className="py-8 md:py-12">
+              <div className="grid grid-cols-1 md:grid-cols-6 gap-8">
+                <div className="col-span-1 md:col-span-3">
+                  <div className="flex items-center space-x-2 mb-6">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center -mr-[4px]">
+                      <span className="text-black font-bold">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e4e4e4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-orbit">
+                          <path d="M20.341 6.484A10 10 0 0 1 10.266 21.85" />
+                          <path d="M3.659 17.516A10 10 0 0 1 13.74 2.152" />
+                          <circle cx="12" cy="12" r="3" />
+                          <circle cx="19" cy="5" r="2" />
+                          <circle cx="5" cy="19" r="2" />
+                        </svg>
+                      </span>
+                    </div>
+                    <span className="text-white text-3xl tracking-wider font-bold">rbit</span>
+                  </div>
+                  <p className="text-gray-300 mb-6 max-w-md">
+                    The next generation chat platform that brings conversations to life with seamless connectivity and cutting-edge design.
+                  </p>
+                  <div className="flex space-x-4">
+                    {socialLinks.map((link) => (
+                      <a
+                        key={link.name}
+                        href={link.href}
+                        className="transition-colors"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <span className="sr-only">{link.name}</span>
+                        {link.icon}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+{/* 
+                <div className="col-span-1 md:col-span-3 flex items-end justify-end relative">
+                  <div className="font-bold tracking-widest text-[#0f0f0f] absolute -bottom-[102px] -right-[65px] text-[10vw] md:text-[10vw] lg:text-[8vw]">
+                    <span className="bg-gradient-to-b from-[#414141] to-[#080808] text-transparent bg-clip-text transition-all duration-300">ORBIT</span>
+                  </div>
+                </div> */}
               </div>
-              <span className="text-white text-3xl tracking-wider font-bold">rbit</span>
             </div>
-            <p className="text-gray-400 mb-6 w-[400px]">
-              The next generation chat platform that brings conversations to life with seamless connectivity and cutting-edge design.
-            </p>
-            <div className="flex space-x-4">
-              {socialLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  className="transition-colors"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span className="sr-only">{link.name}</span>
-                  {link.icon}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div className="col-span-2 md:col-span-3 flex items-end justify-end">
-            <div className="w-[600px] font-bold tracking-widest text-[#0f0f0f] absolute bottom-8 right-[330px] text-[200px]">
-              <span className="bg-gradient-to-b from-[#414141] to-[#080808] text-transparent bg-clip-text transition-all duration-300">ORBIT</span>
-            </div>
+            
           </div>
         </div>
-
-        <div className="border-t border-yellow-500/10 pt-8 flex flex-col md:flex-row justify-between items-center">
+        
+        <div className="px-6 md:px-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-500 text-sm mb-4 md:mb-0">
             &copy; {new Date().getFullYear()} Orbit | All rights reserved.
           </p>

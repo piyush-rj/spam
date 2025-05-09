@@ -21,7 +21,7 @@ const NavbarComponent: React.FC<NavbarProps> = ({
     const { data: session } = useSession();
 
     const name = userName || session?.user?.fullName || "Guest";
-    const avatar = userAvatar || session?.user?.image;
+    const avatar = session?.user?.image;
 
     const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -45,9 +45,35 @@ const NavbarComponent: React.FC<NavbarProps> = ({
                 <div className="flex h-full items-center justify-between">
                     <div className="flex justify-center items-center  space-x-2">
                         <div className="w-[25px] h-[25px] rounded-full flex items-center justify-center -mr-1">
-                            <span className="text-black font-bold "><svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#e4e4e4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-orbit-icon lucide-orbit"><path d="M20.341 6.484A10 10 0 0 1 10.266 21.85"/><path d="M3.659 17.516A10 10 0 0 1 13.74 2.152"/><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/></svg></span>
+                        <span className="text-black font-bold">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                width="28"
+                                height="28"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="url(#gradientStroke)"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="lucide lucide-orbit-icon lucide-orbit"
+                            >
+                                <defs>
+                                <linearGradient id="gradientStroke" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stopColor="#a855f7" />
+                                    <stop offset="100%" stopColor="#22d3ee" />
+                                </linearGradient>
+                                </defs>
+                                <path d="M20.341 6.484A10 10 0 0 1 10.266 21.85" />
+                                <path d="M3.659 17.516A10 10 0 0 1 13.74 2.152" />
+                                <circle cx="12" cy="12" r="3" />
+                                <circle cx="19" cy="5" r="2" />
+                                <circle cx="5" cy="19" r="2" />
+                            </svg>
+                            </span>
+
                         </div>
-                        <span className="text-white text-3xl tracking-wider font-bold ">rbit</span>
+                        <span className="text-[#e4e4e4] text-3xl tracking-wider font-bold ">rbit</span>
                 </div>
                     <div className="flex items-center gap-x-4 pr-2">
                         {isAuthenticated ? (
@@ -63,7 +89,7 @@ const NavbarComponent: React.FC<NavbarProps> = ({
                                 <span className="text-[16px] font-medium pl-1 text-white">{name}</span>
 
                                 {dropdownOpen && (
-                                    <div className="absolute right-0 mt-[100px] bg-black text-yellow-400 shadow-lg rounded-md w-32  z-[1000] border border-gray-800">
+                                    <div className="absolute flex justify-center items-center mt-[100px] bg-black text-yellow-500 shadow-lg rounded-md w-32  z-[1000] border border-gray-800">
                                         <button
                                             className="w-full text-left px-4 py-2 hover:text-red-500 transition-all transform duration-200"
                                             onClick={() => {

@@ -95,11 +95,10 @@ export default function Features() {
         backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23333' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")"
       }}
     >
-      {/* Decorative elements */}
+
       <div className="hidden md:block absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-cyan-500/10 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
       <div className="hidden md:block absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-br from-purple-500/10 to-transparent rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
       
-      {/* Horizontal line with dots */}
       <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent">
         <div className="absolute left-1/4 top-1/2 w-2 h-2 bg-cyan-500 rounded-full -translate-y-1/2" />
         <div className="absolute left-2/4 top-1/2 w-2 h-2 bg-purple-500 rounded-full -translate-y-1/2" />
@@ -132,14 +131,14 @@ export default function Features() {
               onMouseEnter={() => setHoveredIndex(index)}
               onMouseLeave={() => setHoveredIndex(null)}
             >
-              {/* Animated border */}
+              {/* animated border */}
               <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700">
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500 animate-gradient-x"></div>
                 <div className="absolute inset-[1px] rounded-2xl bg-black"></div>
               </div>
               
               <div className="relative z-10 p-8 rounded-2xl bg-black/40 backdrop-blur-sm border border-white/5 h-full flex flex-col">
-                {/* Icon with animated gradient background */}
+                {/* icons */}
                 <div className="relative mb-6 w-14 h-14 overflow-hidden rounded-xl">
                   <div className={`absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500 animate-gradient-x transition-opacity duration-300 ${hoveredIndex === index ? 'opacity-100' : 'opacity-30'}`}></div>
                   <div className="absolute inset-0 flex items-center justify-center text-white">
@@ -158,7 +157,7 @@ export default function Features() {
         <div className="mt-2 relative flex justify-center">
           <div className="relative flex flex-col items-center">
             <div className="w-px h-12 bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
-            <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center bg-black hover:animate-bounce transition-all transform duration-300 backdrop-blur-sm">
+            <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center bg-black animate-bounce transition-all transform duration-300 backdrop-blur-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e4e4e4" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-orbit-icon lucide-orbit"><path d="M20.341 6.484A10 10 0 0 1 10.266 21.85"/><path d="M3.659 17.516A10 10 0 0 1 13.74 2.152"/><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/></svg>
             </div>
           </div>

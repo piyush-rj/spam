@@ -3,10 +3,14 @@ import { useRef, useEffect } from 'react';
 import { gsap } from 'gsap';
 import Button from '../ui/Button';
 import AnimatedText from '../ui/AnimatedText';
+import { useRouter } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 
 export default function Hero() {
   const heroRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
+  const router = useRouter()
+  const { data: session } = useSession()
   
   useEffect(() => {
     const heroEl = heroRef.current;
@@ -31,6 +35,15 @@ export default function Hero() {
       tl.kill();
     };
   }, []);
+
+  function handleRedirect(){
+    if (session ){
+      router.push("/chat")
+    } else {
+      // add toast here
+      alert("please signin to continue")
+    }
+  }
   
   return (
     <div ref={heroRef} className="relative min-h-screen pb-[200px] flex items-center justify-center pt-[200px] overflow-hidden">
@@ -46,7 +59,7 @@ export default function Hero() {
       <div className="container mx-auto max-w-7xl relative z-5 top-0">
         <div className="grid lg:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
-            {/* Badge */}
+
             <div className="inline-flex items-center space-x-2 bg-purple-500/10 rounded-full px-4 py-2 text-cyan-400 text-sm font-medium backdrop-blur-sm">
               <span className="relative flex h-3 w-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
@@ -69,8 +82,7 @@ export default function Hero() {
               />
             </div>
             
-            {/* CTA button */}
-            <div className="cta-buttons flex flex-wrap gap-4">
+            <div onClick={handleRedirect} className="cta-buttons flex flex-wrap gap-4">
               <Button variant="gradient" size="lg" className="text-white shadow-lg shadow-purple-500/20 hover:shadow-cyan-500/40 transition-all duration-300">
                 Get Started
                 <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -79,7 +91,6 @@ export default function Hero() {
               </Button>
             </div>
             
-            {/* User Stats */}
             <div className="flex items-center space-x-4 text-gray-300 text-sm">
               <div className="flex -space-x-2">
                 {[1, 2, 3, 4].map((i) => (
@@ -92,7 +103,6 @@ export default function Hero() {
             </div>
           </div>
           
-          {/* Image and decorative elements */}
           <div className="relative">
             <div className="relative rounded-xl overflow-hidden ml-10 shadow-2xl">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 via-transparent to-cyan-500/10" />
@@ -101,12 +111,10 @@ export default function Hero() {
                 alt="Orbit Chat Interface" 
                 className="w-full h-[500px] object-cover"
               />
-              {/* Accent glows */}
               <div className="absolute top-6 right-6 w-16 h-16 bg-purple-500/20 rounded-full blur-xl" />
               <div className="absolute bottom-12 left-12 w-20 h-20 bg-cyan-500/20 rounded-full blur-xl" />
             </div>
             
-            {/* Floating badge - Encrypted */}
             <div className="absolute -top-8 -right-8 bg-gray-900 rounded-lg p-3 shadow-xl border border-purple-500/30 transform rotate-3 hover:-rotate-1 hover:border-purple-500/50 transition-all duration-300">
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-cyan-500 rounded-full flex items-center justify-center">
@@ -118,7 +126,6 @@ export default function Hero() {
               </div>
             </div>
             
-            {/* Floating badge - Online users */}
             <div className="absolute -bottom-6 left-6 bg-gray-900 rounded-lg p-3 shadow-xl -rotate-3 border border-cyan-500/30 hover:border-cyan-500/50 hover:rotate-1 transform transition-all duration-300">
               <div className="flex items-center space-x-2">
                 <span className="text-cyan-400 text-xs font-medium">ONLINE</span>

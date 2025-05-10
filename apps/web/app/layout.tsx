@@ -4,6 +4,7 @@ import localFont from "next/font/local";
 import "@repo/config/styles"
 import ClientProvider from "./src/ClientProvider";
 import NavbarMain from "./src/components/Dashboard/landing/NavbarMain";
+import SyncTokenToLocalStorage from "./src/SyncLocalStorage";
 
 
 const geistSans = localFont({
@@ -29,7 +30,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ClientProvider>
-          <NavbarMain />
+            <NavbarMain/>
+          <SyncTokenToLocalStorage/>
             {children}
         </ClientProvider>
       </body>

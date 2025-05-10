@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import SignIn from '../../../../auth/signin/page';
 import { useSession, signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export interface NavbarProps {
     userName?: string;
@@ -19,6 +20,7 @@ const NavbarComponent: React.FC<NavbarProps> = ({
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
     const { data: session } = useSession();
+    const router = useRouter();
 
     const name = userName || session?.user?.fullName || "Guest";
     const avatar = session?.user?.image;
@@ -39,11 +41,15 @@ const NavbarComponent: React.FC<NavbarProps> = ({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [dropdownOpen]);
 
+    function handleLogoClick(){
+        router.push("/")
+    }
+
     return (
         <>
             <div className="fixed top-0 p-3 py-5 px-8 left-0 w-full z-[999] bg-opacity-80 backdrop-blur-md ">
                 <div className="flex h-full items-center justify-between">
-                    <div className="flex justify-center items-center  space-x-2">
+                    <div onClick={handleLogoClick} className="flex justify-center items-center cursor-pointer space-x-2">
                         <div className="w-[25px] h-[25px] rounded-full flex items-center justify-center -mr-1">
                         <span className="text-black font-bold">
                             <svg
@@ -74,7 +80,7 @@ const NavbarComponent: React.FC<NavbarProps> = ({
 
                         </div>
                         <span className="text-[#e4e4e4] text-3xl tracking-wider font-bold ">rbit</span>
-                </div>
+                    </div>
                     <div className="flex items-center gap-x-4 pr-2">
                         {isAuthenticated ? (
                             <div className="relative flex items-center gap-2" ref={dropdownRef}>

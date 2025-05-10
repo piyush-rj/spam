@@ -1,12 +1,12 @@
 "use client"
-import { FC, useRef, useEffect, createElement } from 'react';
+import React, { FC, useRef, useEffect, createElement } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/dist/ScrollTrigger';
 
 interface AnimatedTextProps {
   text: string;
   className?: string;
-  element?: keyof JSX.IntrinsicElements; 
+  element?: keyof React.JSX.IntrinsicElements; // Fixed JSX namespace
   delay?: number;
 }
 
@@ -48,7 +48,7 @@ const AnimatedText: FC<AnimatedTextProps> = ({
 
   return createElement(
     element,
-    { ref: textRef as any, className },
+    { ref: textRef, className },
     text
   );
 };

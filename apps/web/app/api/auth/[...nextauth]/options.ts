@@ -1,6 +1,6 @@
 import GoogleProvider from "next-auth/providers/google";
 import { ISODateString, User, type AuthOptions } from "next-auth";
-import prisma from "@repo/db/client"
+import prisma from "@repo/db"
 import jwt from "jsonwebtoken"
 
 declare module "next-auth" {
@@ -43,8 +43,15 @@ export const authOptions: AuthOptions = {
   },
   providers: [
     GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET as string,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
   ],
   callbacks: {
@@ -53,7 +60,7 @@ export const authOptions: AuthOptions = {
         if (!user.email || !user.id) return false;
   
         const existingUser = await prisma.user.findFirst({
-          where: { email: user.email }
+          where: { email: user.email! }
         });
   
         let myUser;
@@ -81,7 +88,7 @@ export const authOptions: AuthOptions = {
           id: myUser.id
         };
   
-        const token = jwt.sign(jwtPayload, process.env.JWT_SECRET || "iambatman", { expiresIn: "365d" });
+        const token = jwt.sign( jwtPayload, process.env.JWT_SECRET || "iambatman", { expiresIn: "365d" });
   
         user.id = myUser.id.toString();
         (user as any).token = token;

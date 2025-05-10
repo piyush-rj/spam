@@ -1,13 +1,38 @@
-"use client"
+"use client";
+
 import React, { useState } from 'react';
+import axios from 'axios';
 import { JoinRoomProps } from '../../../../types/ChatTypes';
+import { CHAT_GROUP } from '../../../../lib/api-endpoint';
 
 const JoinRoom: React.FC<JoinRoomProps> = ({ onJoinRoom, isConnected }) => {
-  const [roomInput, setRoomInput] = useState<string>('');
+  const [roomInput, setRoomInput] = useState<string>("");
+  const [passInput, setPassInput] = useState<string>("");
 
-  const handleJoinRoom = () => {
-    if (roomInput.trim()) {
+  const handleJoinRoom = async () => {
+    if (!roomInput.trim() || !passInput.trim()) return;
+
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.post(
+        CHAT_GROUP,
+        {
+          title: roomInput.trim(),
+          passcode: passInput.trim(),
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log('Group created:', response.data);
       onJoinRoom(roomInput.trim());
+    } catch (error: any) {
+      console.log("create room failed", error)
     }
   };
 
@@ -18,30 +43,53 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoinRoom, isConnected }) => {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center">
-      <div className="bg-gray-800 p-8 rounded-lg shadow-xl border border-gray-700 w-full max-w-md">
-        <h2 className="text-xl font-bold mb-6 text-center">Join a Chat Room</h2>
-        <div className="space-y-4">
+    <div className="flex-1 flex items-center justify-center px-4 sm:px-0 h-auto">
+      <div className="relative w-screen max-w-md p-8 rounded-xl shadow-xl bg-[#0f0f0f] border border-purple-700/30">
+        <h2 className="text-center text-3xl font-extrabold text-white mb-8 tracking-tight">
+          Create a Chat Group
+        </h2>
+
+        <div className="space-y-6">
           <div>
-            <label className="block text-sm font-medium mb-2">Room ID</label>
+            <label className="block text-sm font-medium text-purple-400 mb-2 tracking-wide">
+              Name
+            </label>
             <input
               type="text"
               value={roomInput}
               onChange={(e) => setRoomInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Enter room ID"
-              className="w-full px-4 py-2 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 placeholder-gray-400"
+              placeholder="e.g. orbit room"
+              className="w-full px-4 py-3 rounded-md bg-[#1a1a1a] text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
             />
           </div>
+          <div>
+            <label className="block text-sm font-medium text-purple-400 mb-2 tracking-wide">
+              Passcode
+            </label>
+            <input
+              type="text"
+              value={passInput}
+              onChange={(e) => setPassInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="e.g. abc123"
+              className="w-full px-4 py-3 rounded-md bg-[#1a1a1a] text-white placeholder-gray-500 border border-gray-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+            />
+          </div>
+
           <button
             onClick={handleJoinRoom}
             disabled={!isConnected}
-            className={`w-full py-2 px-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 rounded font-medium transition-all ${
-              !isConnected ? 'opacity-50 cursor-not-allowed' : ''
+            className={`w-full py-3 px-6 rounded-md text-white font-semibold bg-gradient-to-br from-purple-600 to-cyan-600 hover:from-purple-700 hover:to-cyan-700 transition-all duration-300 shadow-md ${
+              !isConnected ? 'opacity-40 cursor-not-allowed' : ''
             }`}
           >
-            {isConnected ? 'Join Room' : 'Connecting...'}
+            {isConnected ? 'Create' : 'Connecting...'}
           </button>
+        </div>
+
+        <div className="mt-6 text-sm text-center text-gray-500">
+          <span className="text-purple-400 tracking-wide font-semibold">Orbit</span>
         </div>
       </div>
     </div>

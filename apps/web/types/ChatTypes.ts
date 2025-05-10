@@ -59,7 +59,7 @@ export interface ChatContainerProps {
 
 export interface AppHeaderProps {
   connected: boolean;
-  userName: string;
-  userAvatar?: string | null;
-  isAuthenticated: boolean;
+  // userName: string;
+  // userAvatar?: string | null;
+  // isAuthenticated: boolean;
 }

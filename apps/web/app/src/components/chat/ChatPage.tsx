@@ -5,6 +5,7 @@ import { useWebSocket } from '../../../../hooks/useWebSocket';
 import JoinRoom from '../chat/JoinRoom';
 import ChatContainer from '../chat/ChatContainer';
 import ChatHeader from '../chat/ChatHeader';
+import ParticleBackground from '../Dashboard/ui/ParticleBackground';
 
 const ChatApp: React.FC = () => {
   const { data: session, status } = useSession();
@@ -30,15 +31,14 @@ const ChatApp: React.FC = () => {
   });
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-gray-100">
+    <div className="flex flex-col mt-20 h-screen bg-black text-gray-100 ">
+      <ParticleBackground/>
+      <p className='flex z-20'>{JSON.stringify(session)}</p>
       <ChatHeader
         connected={connected}
-        userName={userName}
-        userAvatar={userAvatar}
-        isAuthenticated={isAuthenticated}
       />
       
-      <div className="flex-1 flex h-full">
+      <div className="flex-1 flex h-full z-10">
         {!currentRoomId ? (
           <JoinRoom onJoinRoom={joinRoom} isConnected={connected} />
         ) : (

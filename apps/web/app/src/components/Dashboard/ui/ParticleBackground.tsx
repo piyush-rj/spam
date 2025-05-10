@@ -1,6 +1,5 @@
 "use client"
 import { useRef, useEffect } from 'react';
-import { gsap } from 'gsap';
 
 export default function ParticleBackground() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -29,7 +28,32 @@ export default function ParticleBackground() {
       particlesArray.push(new Particle(x, y, directionX, directionY, size, color));
     }
     
-    // Animation loop
+    // The issue is most likely that your original connect function was defined outside the useEffect scope
+    // Let's properly define it here with non-nullable parameters
+    // Still getting errors? Try this approach with the connect function:
+    const connect = (particles: Particle[], canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => {
+      // Assert particles as a non-nullable array if TypeScript is still complaining
+      const safeParticles = particles as Particle[];
+      const maxDistance = canvas.width * 0.08;
+      
+      for (let a = 0; a < safeParticles.length; a++) {
+        for (let b = a; b < safeParticles.length; b++) {
+          const dx = safeParticles[a].x - safeParticles[b].x;
+          const dy = safeParticles[a].y - safeParticles[b].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < maxDistance) {
+            const opacity = 1 - (distance / maxDistance);
+            ctx.strokeStyle = `rgba(255, 215, 0, ${opacity * 0.5})`;
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(safeParticles[a].x, safeParticles[a].y);
+            ctx.lineTo(safeParticles[b].x, safeParticles[b].y);
+            ctx.stroke();
+          }
+        }
+      }
+    };
     const animate = () => {
       requestAnimationFrame(animate);
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -39,6 +63,7 @@ export default function ParticleBackground() {
         particlesArray[i].draw(ctx);
       }
       
+      // We know particlesArray is defined here because we're inside the same scope
       connect(particlesArray, canvas, ctx);
     };
     
@@ -95,27 +120,5 @@ class Particle {
     // Update position
     this.x += this.directionX;
     this.y += this.directionY;
-  }
-}
-
-function connect(particles: Particle[], canvas: HTMLCanvasElement, ctx: CanvasRenderingContext2D) {
-  const maxDistance = canvas.width * 0.08;
-  
-  for (let a = 0; a < particles.length; a++) {
-    for (let b = a; b < particles.length; b++) {
-      const dx = particles[a].x - particles[b].x;
-      const dy = particles[a].y - particles[b].y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      
-      if (distance < maxDistance) {
-        const opacity = 1 - (distance / maxDistance);
-        ctx.strokeStyle = `rgba(255, 215, 0, ${opacity * 0.5})`;
-        ctx.lineWidth = 0.5;
-        ctx.beginPath();
-        ctx.moveTo(particles[a].x, particles[a].y);
-        ctx.lineTo(particles[b].x, particles[b].y);
-        ctx.stroke();
-      }
-    }
   }
 }

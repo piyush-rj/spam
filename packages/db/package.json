@@ -1,9 +1,11 @@
-
 {
   "name": "@repo/db",
   "version": "1.0.0",
   "exports": {
-    "./client": "./index.ts"
+    ".": {
+      "import": "./index.ts",
+      "require": "./index.ts"
+    }
   },
   "scripts": {
     "generate": "prisma generate"

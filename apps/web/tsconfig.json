@@ -1,6 +1,8 @@
 {
   "extends": "@repo/typescript-config/nextjs.json",
   "compilerOptions": {
+    "jsx": "preserve",
+    "strictNullChecks": false,
     "plugins": [
       {
         "name": "next"
@@ -12,8 +14,9 @@
     "**/*.tsx",
     "next-env.d.ts",
     "next.config.js",
-    ".next/types/**/*.ts"
-, "app/src/components/DashboardLeftButtons/RedBtn"  ],
+    ".next/types/**/*.ts",
+    "app/src/components/DashboardLeftButtons/RedBtn"
+  ],
   "exclude": [
     "node_modules"
   ]

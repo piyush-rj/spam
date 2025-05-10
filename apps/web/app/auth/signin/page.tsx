@@ -3,9 +3,7 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
-import { Caveat } from "next/font/google";
 
-const caveat = Caveat({ weight: "600" });
 
 export default function SignIn()  {
   const searchParams = useSearchParams();
@@ -26,7 +24,7 @@ export default function SignIn()  {
             <div className="absolute bottom-10 right-10 w-20 h-20 rounded-full border-4 border-white"></div>
           </div>
           <div className="relative z-10 text-center">
-            <h1 className={`${caveat.className} text-4xl font-bold mb-2`}>Welcome</h1>
+            <h1 className={` text-4xl font-bold mb-2`}>Welcome</h1>
             <p className="text-gray-100 text-lg">Sign in to continue</p>
           </div>
         </div>
@@ -34,7 +32,7 @@ export default function SignIn()  {
         <div className="bg-gray-800 p-8 space-y-8">
           <div className="text-center mb-6">
             <div className="inline-flex items-center justify-center p-4 bg-gray-700 rounded-full mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFD700" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" className="lucide lucide-orbit-icon lucide-orbit"><path d="M20.341 6.484A10 10 0 0 1 10.266 21.85"/><path d="M3.659 17.516A10 10 0 0 1 13.74 2.152"/><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/></svg>
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFD700" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-orbit-icon lucide-orbit"><path d="M20.341 6.484A10 10 0 0 1 10.266 21.85"/><path d="M3.659 17.516A10 10 0 0 1 13.74 2.152"/><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/></svg>
             </div>
             <p className="text-gray-300">Connect with people all around the world</p>
           </div>

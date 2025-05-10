@@ -1,8 +1,9 @@
 import { Suspense } from 'react';
-import Hero from "./src/components/Dashboard/landing/Hero";
+import ParticleBackground from './src/components/Dashboard/ui/ParticleBackground';
+import Hero from './src/components/Dashboard/landing/Hero';
 import Features from './src/components/Dashboard/landing/Features';
 import Footer from './src/components/Dashboard/landing/Footer';
-import ParticleBackground from './src/components/Dashboard/ui/ParticleBackground';
+
 
 export default function Home() {
   return (

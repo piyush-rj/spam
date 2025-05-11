@@ -16,6 +16,7 @@ const ChatContainer: React.FC<ChatContainerProps> = ({
   onLeaveRoom
 }) => {
   const [showUsersList, setShowUsersList] = useState(false);
+  
 
   const toggleUsersList = () => {
     setShowUsersList(!showUsersList);

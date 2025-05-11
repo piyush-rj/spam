@@ -6,6 +6,7 @@ import JoinRoom from '../chat/JoinRoom';
 import ChatContainer from '../chat/ChatContainer';
 import ChatHeader from '../chat/ChatHeader';
 import ParticleBackground from '../Dashboard/ui/ParticleBackground';
+import GroupChatCard from './GroupChatCard';
 
 const ChatApp: React.FC = () => {
   const { data: session, status } = useSession();
@@ -30,31 +31,37 @@ const ChatApp: React.FC = () => {
     userName
   });
 
-  return (
-    <div className="flex flex-col mt-20 h-screen bg-black text-gray-100 ">
-      <ParticleBackground/>
-      <p className='flex z-20'>{JSON.stringify(session)}</p>
-      <ChatHeader
-        connected={connected}
-      />
+  // return (
+  //   <div className="flex flex-col pt-20 h-screen w-full bg-black text-gray-100 ">
+  //     <ParticleBackground/>
+  //     <p className='flex z-20'>{JSON.stringify(session)}</p>
+  //     <ChatHeader
+  //       connected={connected}
+  //     />
       
-      <div className="flex-1 flex h-full z-10">
-        {!currentRoomId ? (
-          <JoinRoom onJoinRoom={joinRoom} isConnected={connected} />
-        ) : (
-          <ChatContainer
-            roomId={currentRoomId}
-            messages={messages}
-            users={users}
-            userCount={userCount}
-            currentUserId={userId}
-            onSendMessage={sendMessage}
-            onLeaveRoom={leaveRoom}
-          />
-        )}
-      </div>
+  //     <div className="flex-1 flex h-full z-10">
+  //       {!currentRoomId ? (
+  //         <JoinRoom onJoinRoom={joinRoom} isConnected={connected} />
+  //       ) : (
+  //         <ChatContainer
+  //           roomId={currentRoomId}
+  //           messages={messages}
+  //           users={users}
+  //           userCount={userCount}
+  //           currentUserId={userId}
+  //           onSendMessage={sendMessage}
+  //           onLeaveRoom={leaveRoom}
+  //         />
+  //       )}
+  //     </div>
+  //   </div>
+  // );
+
+
+  return (
+    <div>
     </div>
-  );
+  )
 };
 
 export default ChatApp;

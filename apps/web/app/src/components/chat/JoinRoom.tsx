@@ -2,12 +2,15 @@
 
 import React, { useState } from 'react';
 import axios from 'axios';
-import { JoinRoomProps } from '../../../../types/ChatTypes';
-import { CHAT_GROUP } from '../../../../lib/api-endpoint';
+import { ChatGroupType, JoinRoomProps } from '../../../../types/ChatTypes';
+import { CHAT_GROUP_URL } from '../../../../lib/api-endpoint';
+import { fetchGroups } from '../../../../fetch/fetchGroup';
+import { useSession } from 'next-auth/react';
 
 const JoinRoom: React.FC<JoinRoomProps> = ({ onJoinRoom, isConnected }) => {
   const [roomInput, setRoomInput] = useState<string>("");
   const [passInput, setPassInput] = useState<string>("");
+  const { data: session } = useSession()
 
   const handleJoinRoom = async () => {
     if (!roomInput.trim() || !passInput.trim()) return;
@@ -16,7 +19,7 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoinRoom, isConnected }) => {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        CHAT_GROUP,
+        CHAT_GROUP_URL,
         {
           title: roomInput.trim(),
           passcode: passInput.trim(),
@@ -42,8 +45,20 @@ const JoinRoom: React.FC<JoinRoomProps> = ({ onJoinRoom, isConnected }) => {
     }
   };
 
+  async function getGroups(){
+    try {
+      const groups = await fetchGroups(
+        session.user.token
+      )
+      console.log("the groups are: ", groups)
+    } catch (error) {
+      console.log("fetch faileddd")
+    }
+  }
+
   return (
     <div className="flex-1 flex items-center justify-center px-4 sm:px-0 h-auto">
+        <button onClick={getGroups} className='bg-white text-black px-4 py-1.5 rounded-md'>show groups</button>
       <div className="relative w-screen max-w-md p-8 rounded-xl shadow-xl bg-[#0f0f0f] border border-purple-700/30">
         <h2 className="text-center text-3xl font-extrabold text-white mb-8 tracking-tight">
           Create a Chat Group

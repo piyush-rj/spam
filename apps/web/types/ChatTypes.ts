@@ -63,3 +63,19 @@ export interface AppHeaderProps {
   // userAvatar?: string | null;
   // isAuthenticated: boolean;
 }
+
+export interface ChatGroupType {
+  id : string,
+  user_id : number,
+  title : string,
+  passcode : string,
+  createdAt : string
+}
+
+export interface CustomUser {
+  id: string;
+  fullName?: string | null;
+  email?: string | null;
+  image?: string | null;
+  token?: string | null;
+}

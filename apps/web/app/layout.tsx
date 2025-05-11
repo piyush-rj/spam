@@ -5,6 +5,7 @@ import "@repo/config/styles"
 import ClientProvider from "./src/ClientProvider";
 import NavbarMain from "./src/components/Dashboard/landing/NavbarMain";
 import SyncTokenToLocalStorage from "./src/SyncLocalStorage";
+import { ToastContainer } from 'react-toastify';
 
 
 const geistSans = localFont({
@@ -31,7 +32,15 @@ export default function RootLayout({
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <ClientProvider>
             <NavbarMain/>
-          <SyncTokenToLocalStorage/>
+            <SyncTokenToLocalStorage/>
+            <ToastContainer 
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              pauseOnHover
+            />
             {children}
         </ClientProvider>
       </body>

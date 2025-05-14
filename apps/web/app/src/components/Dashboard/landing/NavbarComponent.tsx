@@ -66,7 +66,7 @@ const NavbarComponent: React.FC<NavbarProps> = ({
                                 strokeWidth="2"
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
-                                className="lucide lucide-orbit-icon lucide-orbit"
+                                className="lucide lucide-orbit-icon lucide-orbit hover:animate-spin"
                             >
                                 <defs>
                                 <linearGradient id="gradientStroke" x1="0%" y1="0%" x2="100%" y2="0%">

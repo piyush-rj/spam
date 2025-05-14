@@ -6,7 +6,6 @@ export default function CreateGroup(){
     return(
         <div>
             <CreateGroupButton/>
-            {/* <GroupPage/> */}
         </div>
     )
 }

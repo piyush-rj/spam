@@ -6,12 +6,14 @@ import { CreateGroupSchema } from "@/app/validation/CreateGroupValidation";
 import axios from "axios"
 import { useSessionStore } from "@/app/zustand/atoms/zustand";
 import { CHAT_GROUP_URL } from "@/lib/api-endpoint";
+import { useRouter } from "next/navigation";
 
 const DialogBox = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [password, setPassword] = useState("");
-  const { session } = useSessionStore()
+  const { session } = useSessionStore();
+  const router = useRouter()
 
   const handleSubmit = () => {
     const token = session.user.token;
@@ -79,7 +81,16 @@ const DialogBox = () => {
         >
           Create Group
         </button>
+
+        
       </div>
+      <button
+        onClick={() => router.push("/groups")}
+        className="px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-md font-medium hover:from-gray-800 hover:to-black transition-all duration-200"
+      >
+        My Groups
+      </button>
+
     </>
   );
 };

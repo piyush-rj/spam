@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import axios from 'axios';
+import { useSessionStore } from '@/app/zustand/atoms/zustand';
 
 type Group = {
   id: string;
@@ -21,11 +22,14 @@ export default function GroupPage() {
   const { id } = useParams();
   const [group, setGroup] = useState<Group | null>(null);
   const [loading, setLoading] = useState(true);
+  const { session } = useSessionStore()
+
+  const paramsId = session.user.id 
 
   useEffect(() => {
     const fetchGroup = async () => {
       try {
-        const res = await axios.get<Group>(`http://localhost:8080/api/group/${id}`);
+        const res = await axios.get<Group>(`http://localhost:8080/api/group/${paramsId}`);
         setGroup(res.data);
       } catch (err) {
         console.error('Error fetching group:', err);

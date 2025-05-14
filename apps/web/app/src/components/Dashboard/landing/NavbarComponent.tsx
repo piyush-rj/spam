@@ -2,10 +2,9 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import SignIn from '../../../../auth/signin/page';
-import { useSession, signOut } from 'next-auth/react';
+import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useRecoilValue } from 'recoil';
-import { useSessionStore } from '../../../../recoil/atoms/atom';
+import { useSessionStore } from '../../../../zustand/atoms/zustand';
 
 
 export interface NavbarProps {
@@ -25,7 +24,7 @@ const NavbarComponent: React.FC<NavbarProps> = ({
     const { session } = useSessionStore()
     const router = useRouter();
 
-    console.log(session)
+    console.log("session is : ", session)
 
     const name = userName || session?.user?.name;
     const avatar = session?.user?.image;
@@ -97,7 +96,7 @@ const NavbarComponent: React.FC<NavbarProps> = ({
                                         className="h-[35px] w-[35px] rounded-full border border-black cursor-pointer"
                                     />
                                 )}
-                                {/* <span className="text-[16px] font-medium pl-1 text-white">{session.user.name}</span> */}
+                                <span className="text-[16px] font-medium pl-1 text-white">{name}</span>
 
                                 {dropdownOpen && (
                                     <div className="absolute flex justify-center items-center mt-[100px] bg-[#141414] text-yellow-500 shadow-lg rounded-md w-32  z-[1000] border border-gray-800">

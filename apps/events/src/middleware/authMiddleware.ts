@@ -1,8 +1,7 @@
 import jwt from "jsonwebtoken";
 import { Request, Response, NextFunction } from "express";
-import dotenv from "dotenv"
 
-dotenv.config()
+
 
 export default function middleware(req: Request, res: Response, next: NextFunction): void {
     try {
@@ -15,7 +14,7 @@ export default function middleware(req: Request, res: Response, next: NextFuncti
 
         const token = authHeader.split(" ")[1];
 
-        jwt.verify(token, process.env.JWT_SECRET || "iambatman", (err, decodedUser) => {
+        jwt.verify(token, process.env.JWT_SECRET || "mysecret", (err, decodedUser) => {
             if (err) {
                 res.status(401).json({
                     msg: "not authorized",

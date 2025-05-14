@@ -1,22 +1,24 @@
 "use client"
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import Hero from './src/components/Dashboard/landing/Hero';
 import Features from './src/components/Dashboard/landing/Features';
 import Footer from './src/components/Dashboard/landing/Footer';
-import { useSetRecoilState } from 'recoil';
 import { useSession } from 'next-auth/react';
-import { CustomSession } from './api/auth/[...nextauth]/options';
-import { useSessionStore } from './recoil/atoms/atom';
+import { useSessionStore } from './zustand/atoms/zustand';
 
 
 export default function Home() {
 
-  const { setSession } = useSessionStore();
+    const { setSession } = useSessionStore();
     const session  = useSession();
+
+    const sessionData = useMemo(() => {
+      return session.data;
+    }, [session])
     
     useEffect(() => {
-      setSession(session.data)
-    }, [session])
+      setSession(sessionData)
+    }, [sessionData])
 
 
   return (

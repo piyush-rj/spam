@@ -8,7 +8,8 @@ export default async function show(req: Request, res: Response) {
         const group = await prisma.chatGroup.findUnique({
             where: {
                 id: id
-            }
+            },
+            include: { user: true }
         });
 
         res.status(201).json(group);

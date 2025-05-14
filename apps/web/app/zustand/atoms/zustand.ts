@@ -12,7 +12,7 @@ export const useSessionStore = create<UserState>()(
   persist(
     (set) => ({
       session: null,
-      setSession: (session) => set({ session }),
+      setSession: (session) => set({ session }), //
       clearSession: () => set({ session: null }),
     }),
     {

@@ -7,8 +7,11 @@ import cors from "cors"
 const app = express();
 app.use(cors())
 app.use(express.json());
+
+// API
 app.use("/api", router);
 
+// websocket
 const server = http.createServer(app);
 new WebSocketClass(server);
 

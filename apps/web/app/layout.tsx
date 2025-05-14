@@ -8,7 +8,7 @@ import { ToastContainer } from 'react-toastify';
 import Providers from "./Providers";
 import { useEffect } from "react";
 import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { userSessionAtom } from "./recoil/atoms/atom";
+import { userSessionAtom } from "./zustand/atoms/zustand";
 import { useSession } from "next-auth/react";
 import { CustomSession } from "./api/auth/[...nextauth]/options";
 

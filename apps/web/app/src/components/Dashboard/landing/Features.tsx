@@ -108,7 +108,7 @@ export default function Features() {
       <div className="container mx-auto px-4 max-w-7xl relative z-10">
         <div className="max-w-3xl mx-auto text-center mb-20">
           <div className="inline-block mb-6">
-            <div className="py-1 px-3 border border-white/10 rounded-full text-xs uppercase tracking-widest text-white/70 backdrop-blur-sm bg-black/30">
+            <div className="py-1 px-3 border border-white/10 rounded-full text-xs uppercase tracking-widest text-white/70 backdrop-blur-sm bg-[#141414]/30">
               Communication Reimagined
             </div>
           </div>
@@ -134,10 +134,10 @@ export default function Features() {
               {/* animated border */}
               <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700">
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500 animate-gradient-x"></div>
-                <div className="absolute inset-[1px] rounded-2xl bg-black"></div>
+                <div className="absolute inset-[1px] rounded-2xl bg-[#141414]"></div>
               </div>
               
-              <div className="relative z-10 p-8 rounded-2xl bg-black/40 backdrop-blur-sm border border-white/5 h-full flex flex-col">
+              <div className="relative z-10 p-8 rounded-2xl bg-[#141414]/40 backdrop-blur-sm border border-white/5 h-full flex flex-col">
                 {/* icons */}
                 <div className="relative mb-6 w-14 h-14 overflow-hidden rounded-xl">
                   <div className={`absolute inset-0 bg-gradient-to-r from-cyan-500 via-purple-500 to-cyan-500 animate-gradient-x transition-opacity duration-300 ${hoveredIndex === index ? 'opacity-100' : 'opacity-30'}`}></div>
@@ -157,7 +157,7 @@ export default function Features() {
         <div className="mt-2 relative flex justify-center">
           <div className="relative flex flex-col items-center">
             <div className="w-px h-12 bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
-            <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center bg-black animate-bounce transition-all transform duration-300 backdrop-blur-sm">
+            <div className="w-10 h-10 rounded-full border border-white/10 flex items-center justify-center bg-[#141414] animate-bounce transition-all transform duration-300 backdrop-blur-sm">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e4e4e4" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-orbit-icon lucide-orbit"><path d="M20.341 6.484A10 10 0 0 1 10.266 21.85"/><path d="M3.659 17.516A10 10 0 0 1 13.74 2.152"/><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/></svg>
             </div>
           </div>

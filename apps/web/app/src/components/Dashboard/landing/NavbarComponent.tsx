@@ -4,6 +4,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import SignIn from '../../../../auth/signin/page';
 import { useSession, signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import { useRecoilValue } from 'recoil';
+import { useSessionStore } from '../../../../recoil/atoms/atom';
+
 
 export interface NavbarProps {
     userName?: string;
@@ -19,10 +22,12 @@ const NavbarComponent: React.FC<NavbarProps> = ({
     const [menuOpen, setMenuOpen] = useState(false);
     const [dropdownOpen, setDropdownOpen] = useState(false);
     const [confirmLogoutOpen, setConfirmLogoutOpen] = useState(false);
-    const { data: session } = useSession();
+    const { session } = useSessionStore()
     const router = useRouter();
 
-    const name = userName || session?.user?.fullName || "Guest";
+    console.log(session)
+
+    const name = userName || session?.user?.name;
     const avatar = session?.user?.image;
 
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -92,10 +97,10 @@ const NavbarComponent: React.FC<NavbarProps> = ({
                                         className="h-[35px] w-[35px] rounded-full border border-black cursor-pointer"
                                     />
                                 )}
-                                <span className="text-[16px] font-medium pl-1 text-white">{name}</span>
+                                {/* <span className="text-[16px] font-medium pl-1 text-white">{session.user.name}</span> */}
 
                                 {dropdownOpen && (
-                                    <div className="absolute flex justify-center items-center mt-[100px] bg-black text-yellow-500 shadow-lg rounded-md w-32  z-[1000] border border-gray-800">
+                                    <div className="absolute flex justify-center items-center mt-[100px] bg-[#141414] text-yellow-500 shadow-lg rounded-md w-32  z-[1000] border border-gray-800">
                                         <button
                                             className="w-full text-left px-4 py-2 hover:text-red-500 transition-all transform duration-200"
                                             onClick={() => {
@@ -121,7 +126,7 @@ const NavbarComponent: React.FC<NavbarProps> = ({
             </div>
 
             {menuOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-60 z-[998]">
+                <div className="fixed inset-0 flex items-center justify-center bg-[#141414] bg-opacity-60 z-[998]">
                     <div className="relative z-50">
                         <SignIn />
                         <button
@@ -135,8 +140,8 @@ const NavbarComponent: React.FC<NavbarProps> = ({
             )}
 
             {confirmLogoutOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-70 z-[1001]">
-                    <div className="bg-black rounded-md p-9 shadow-xl text-center w-[90%] max-w-sm border border-gray-800">
+                <div className="fixed inset-0 flex items-center justify-center bg-[#141414] bg-opacity-70 z-[1001]">
+                    <div className="bg-[#141414] rounded-md p-9 shadow-xl text-center w-[90%] max-w-sm border border-gray-800">
                         <p className="text-lg font-medium text-[#e4e4e4] mb-4">
                             Are you sure you want to <span className='text-red-400'>logout?</span>
                         </p>
@@ -154,7 +159,7 @@ const NavbarComponent: React.FC<NavbarProps> = ({
                                     setConfirmLogoutOpen(false);
                                 }}
                             >
-                                Yes, Logout
+                                Logout
                             </button>
                         </div>
                     </div>

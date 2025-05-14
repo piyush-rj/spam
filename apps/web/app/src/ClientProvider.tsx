@@ -1,6 +1,7 @@
 "use client"
 
 import { SessionProvider } from "next-auth/react"
+import Providers from "../Providers"
 
 export default function ClientProvider({ 
   children 
@@ -9,7 +10,10 @@ export default function ClientProvider({
 }) {
   return (
     <SessionProvider>
-      {children}
+      <Providers>
+
+        {children}
+      </Providers>
     </SessionProvider>
   )
 }

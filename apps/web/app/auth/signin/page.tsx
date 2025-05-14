@@ -16,7 +16,7 @@ export default function SignIn() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-md bg-black/30 backdrop-blur-md border border-purple-600 rounded-2xl shadow-xl overflow-hidden">
+      <div className="w-full max-w-md bg-[#141414]/30 backdrop-blur-md border border-purple-600 rounded-2xl shadow-xl overflow-hidden">
       
         <div className="bg-gradient-to-r from-purple-700 to-cyan-500 py-6 text-center text-white">
           <h1 className="text-3xl font-extrabold">Welcome</h1>
@@ -89,7 +89,7 @@ export default function SignIn() {
           </p>
         </div>
 
-        <div className="bg-black/30 py-4 text-center border-t border-gray-700 text-sm text-gray-500">
+        <div className="bg-[#141414]/30 py-4 text-center border-t border-gray-700 text-sm text-gray-500">
           Need help?{" "}
           <a
             href="https://github.com/piyush-rj"

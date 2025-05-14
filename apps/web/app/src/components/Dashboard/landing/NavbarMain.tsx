@@ -1,13 +1,11 @@
 "use client"
-import { useSession } from "next-auth/react";
 import NavbarComponent from "./NavbarComponent";
+import { useSession } from "next-auth/react";
 
 export default function NavbarMain(){
-    const { data: session, status } = useSession();
-
-    const userName = session?.user.fullName || "guest";
+    const { status } = useSession()
     const isAuthenticated = status === "authenticated"
 
 
-    return <NavbarComponent userName={userName} isAuthenticated={isAuthenticated} />
+    return <NavbarComponent isAuthenticated={isAuthenticated} />
 }

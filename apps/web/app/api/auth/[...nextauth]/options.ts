@@ -1,41 +1,21 @@
 import GoogleProvider from "next-auth/providers/google";
-import { ISODateString, User, type AuthOptions } from "next-auth";
+import { ISODateString, Session, User, type AuthOptions } from "next-auth";
+import { JWT } from "next-auth/jwt";
 import prisma from "@repo/db"
 import jwt from "jsonwebtoken"
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      id: string;
-      fullName?: string | null;
-      email?: string | null;
-      image?: string | null;
-      token?: string | null;
-    };
-  }
-
-  interface User {
-    id: string;
-    fullName?: string | null;
-    email?: string | null;
-    image?: string | null;
-    token?: string | null;
-  }
+export interface CustomSession { 
+  user?: CustomUser,
+  expires: ISODateString
 }
 
-declare module "next-auth/jwt" {
-  interface JWT {
-    user?: {
-      id: string;
-      fullName?: string | null;
-      email?: string | null;
-      image?: string | null;
-      token?: string | null;
-    };
-  }
+export interface CustomUser {
+  id? : string | null,
+  name?: string | null,
+  email?: string | null,
+  image?: string | null,
+  token?: string | null
 }
-
-
 
 export const authOptions: AuthOptions = {
   pages: {
@@ -55,76 +35,63 @@ export const authOptions: AuthOptions = {
     }),
   ],
   callbacks: {
-    async signIn({ user }) {
+    async signIn({ user }: { user: CustomUser }) {
       try {
-        if (!user.email || !user.id) return false;
-  
-        const existingUser = await prisma.user.findFirst({
-          where: { email: user.email! }
-        });
-  
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email }
+        })
         let myUser;
-        if (existingUser) {
+        if(existingUser) {
           myUser = await prisma.user.update({
             where: { email: user.email },
             data: {
-              name: user.name,
-              image: user.image,
+              name: user.email,
+              email: user.email,
+              image: user.image
             }
-          });
+          })
         } else {
           myUser = await prisma.user.create({
             data: {
               email: user.email,
               name: user.name,
-              image: user.image,
+              image: user.image
             }
-          });
+          })
         }
   
         const jwtPayload = {
           name: myUser.name,
           email: myUser.email,
           id: myUser.id
-        };
+        }
   
-        const token = jwt.sign( jwtPayload, process.env.JWT_SECRET || "iambatman", { expiresIn: "365d" });
+        const token = jwt.sign(jwtPayload, process.env.NEXTAUTH_SECRET || "secret", {
+          expiresIn: "365d"
+        })
   
         user.id = myUser.id.toString();
-        (user as any).token = token;
+        user.token = token;
+        console.log("options user: ", user)
         return true;
-  
-      } catch (err) {
-        console.error(err);
+      } catch (error) {
+        console.error("signin failed : ", error)
         return false;
       }
     },
   
     async jwt({ token, user }) {
-      if (user) {
-        const customUser: User = {
-          id: user.id,
-          fullName: user.name,
-          email: user.email,
-          image: user.image,
-          token: (user as any).token,
-        };
-        token.user = customUser;
+      if(user) {
+        token.user = user as CustomUser;
       }
       return token;
     },
   
-    async session({ session, token }) {
+    async session({ session, token }: { session: CustomSession, token: JWT }) {
       if (token.user) {
-        session.user = token.user as User;
+        session.user = token.user as CustomUser ;
       }
       return session;
-    },
-  
-    async redirect({ url, baseUrl }) {
-      return url.includes("/signin") || url.includes("/signout")
-        ? url
-        : `${baseUrl}/`;
     },
   }
 };

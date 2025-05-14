@@ -1,6 +1,7 @@
 import "@repo/config/styles"
 import ClientProvider from "../../src/ClientProvider";
 import NavbarMain from "../../src/components/Dashboard/landing/NavbarMain";
+import Providers from "../../Providers";
 
 
 export default function RootLayout({
@@ -12,8 +13,10 @@ export default function RootLayout({
     <html lang="en">
       <body >
         <ClientProvider>
-          <NavbarMain />
-            {children}
+          <Providers>
+            <NavbarMain />
+              {children}
+          </Providers>
         </ClientProvider>
       </body>
     </html>

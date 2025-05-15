@@ -7,6 +7,7 @@ import axios from "axios"
 import { useSessionStore } from "@/app/zustand/atoms/zustand";
 import { CHAT_GROUP_URL } from "@/lib/api-endpoint";
 import { useRouter } from "next/navigation";
+import MultiStepGroupForm from "./CreateGroupForm";
 
 const DialogBox = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -73,23 +74,25 @@ const DialogBox = () => {
         </div>
       )}
 
-      {/* create group button (on page) */}
+
+
+      <MultiStepGroupForm isOpen={isOpen} setIsOpen={setIsOpen}/>
+
+      {/* create group button */}
       <div className="flex justify-center mt-6">
         <button
           onClick={() => setIsOpen(true)}
-          className="px-4 py-2 bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-md font-medium hover:bg-gradient-to-r hover:from-blue-900 hover:to-blue-950 transition-all tranform duration-200"
+          className="px-4 py-2 bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-md font-medium hover:from-blue-800 hover:to-blue-950 transition-all duration-200"
         >
           Create Group
         </button>
-
-        
       </div>
-      <button
+      {/* <button
         onClick={() => router.push("/groups")}
         className="px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-md font-medium hover:from-gray-800 hover:to-black transition-all duration-200"
       >
         My Groups
-      </button>
+      </button> */}
 
     </>
   );

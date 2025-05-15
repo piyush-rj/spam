@@ -12,7 +12,7 @@ export default async function show(req: Request, res: Response) {
             include: { user: true }
         });
 
-        res.status(201).json(group);
+        res.json(group);
         return;
     } catch (error) {
         console.error("fetch chat group by id error:", error);

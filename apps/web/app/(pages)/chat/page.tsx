@@ -4,17 +4,18 @@ import { Home, PlusCircle, Users, User, Settings as SettingsIcon } from "lucide-
 import CreateGroup from "@/app/src/components/Chat/CreateGroup";
 import { useState } from "react";
 import { useSessionStore } from "../../zustand/atoms/zustand";
-import UserGroups from "../users/[userId]/groups";
+import UserGroupsPage from "../groups/[id]/page";
 
 export default function Chat() {
   const [activeTab, setActiveTab] = useState("home");
 
   const session = useSessionStore((state) => state.session);
+
   const userId = session?.user?.id;
 
   return (
     <div className="h-screen w-full pt-[80px] flex">
-      {/* Sidebar */}
+      {/* sidebar */}
       <div className="h-full w-64 bg-[#0f0f0f] border-r border-[#1f1f1f] text-white p-6 flex flex-col justify-between">
         <div>
           <button
@@ -69,33 +70,39 @@ export default function Chat() {
         </div>
       </div>
 
+
+
       {/* Right Panel */}
       <div className="h-full w-full bg-[#121212] p-6 text-white overflow-auto">
         {activeTab === "home" && (
           <div className="text-xl font-semibold">Welcome to ORBIT</div>
         )}
+
         {activeTab === "create" && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Create Group</h2>
             <CreateGroup />
           </div>
         )}
+
         {activeTab === "groups" && (
           <div>
             <h2 className="text-xl font-semibold mb-4">My Groups</h2>
             {userId ? (
-              <UserGroups />
+              <UserGroupsPage userId={userId} />
             ) : (
-              <p className="text-gray-400">Loading session...</p>
+              <p className="text-gray-400">Please sign in to view your groups</p>
             )}
           </div>
         )}
+
         {activeTab === "profile" && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Your Profile</h2>
             <p>Profile details and settings will appear here.</p>
           </div>
         )}
+
         {activeTab === "settings" && (
           <div>
             <h2 className="text-xl font-semibold mb-4">Settings</h2>

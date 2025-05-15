@@ -66,7 +66,7 @@ export const useGroupsStore = create<GroupsState>((set) => ({
   fetchGroups: async (userId: string) => {
     set({ loading: true, error: null });
     try {
-      const response = await axios.get<ChatGroup[]>(`http://localhost:8080/api/users/${userId}/groups`);
+      const response = await axios.get<ChatGroup[]>(`http://localhost:8080/api/group/${userId}`);
       set({ groups: response.data });
     } catch (err) {
       set({ error: 'Failed to load groups. Please try again later.' });

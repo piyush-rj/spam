@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Link from "next/link";
 import { CHAT_GROUP_URL } from "@/lib/api-endpoint";
-import { GroupDetail } from "./[id]/page";
 import { useSessionStore } from "@/app/zustand/atoms/zustand";
+import { ChatGroupType } from "@/types/ChatTypes";
 
 type Group = {
   id: string;
@@ -20,7 +20,7 @@ export default function GroupListPage() {
   useEffect(() => {
     const fetchGroups = async () => {
       try {
-        const res = await axios.get<GroupDetail[]>(CHAT_GROUP_URL, {
+        const res = await axios.get<ChatGroupType[]>(CHAT_GROUP_URL, {
             headers: {
                 "Authorization": `Bearer ${token}`
             }

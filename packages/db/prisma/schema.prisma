@@ -14,14 +14,13 @@ datasource db {
 }
 
 model User {
-  id         Int         @id @default(autoincrement())
-  oauth_id   String?     @unique
+  id         Int          @id @default(autoincrement())
+  oauth_id   String?      @unique
   name       String?
-  email      String      @unique
+  email      String       @unique
   image      String?
-  isAdmin    Boolean     @default(false)
   chatGroups ChatGroup[]
-  GroupUsers  GroupUsers[]
+  GroupUsers GroupUsers[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -29,29 +28,46 @@ model User {
   @@map("users")
 }
 
-
 // created_user
 model ChatGroup {
   id         String       @id @default(uuid()) @db.Uuid
   user       User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id    Int
   title      String       @db.VarChar(191)
-  passcode   String       @db.VarChar(30)
+  passcode   String?      @db.VarChar(30)
+  type       GroupType    @default(PUBLIC)
   createdAt  DateTime     @default(now())
   image      String?
-  GroupUsers GroupUsers[] 
-
+  GroupUsers GroupUsers[]
 
   @@index([createdAt])
   @@map("chat-groups")
 }
 
-model GroupUsers {
-  id        Int       @id @default(autoincrement())
-  group     ChatGroup @relation(fields: [group_id], references: [id], onDelete: Cascade)
-  group_id  String    @db.Uuid
-  user      User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id   Int
 
-  createdAt DateTime  @default(now())
+model GroupUsers {
+  id       Int       @id @default(autoincrement())
+  group    ChatGroup @relation(fields: [group_id], references: [id], onDelete: Cascade)
+  group_id String    @db.Uuid
+  user     User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id  Int
+  role      GroupRole   @default(MEMBER)
+
+  createdAt DateTime @default(now())
+}
+
+
+model UserPresence {
+  userId      Int     @id
+  isOnline    Boolean @default(false)
+}
+
+enum GroupType {
+  PUBLIC
+  PRIVATE
+}
+
+enum GroupRole {
+  ADMIN
+  MEMBER
 }

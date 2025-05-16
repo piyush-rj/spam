@@ -9,8 +9,10 @@ import show from "../chatGroupController/getGroupById";
 import userGroups from "../userController/groupByUserId";
 import { uploadImage } from "../chatGroupController/uploadGroupImage";
 import { upload } from "../middleware/uploadMiddleware";
+import { joinGroup } from "../chatGroupController/joinChatGroup";
 
 const router = Router();
+
 
 // group-routes
 router.post("/group", middleware, createChatGroup);
@@ -18,9 +20,13 @@ router.put("/group/:id", middleware, updateGroup);
 router.delete("/group/:id", middleware, deleteGroup);
 router.get("/group", middleware, index);
 router.get("/group/:id", middleware, show);
+router.post("/group/join", middleware, joinGroup);
+
+
 
 // image-upload
-router.post("/upload", middleware, upload.single("image"), uploadImage)
+router.post("/upload", middleware, upload.single("image"), uploadImage);
+
 
 
 // user-routes

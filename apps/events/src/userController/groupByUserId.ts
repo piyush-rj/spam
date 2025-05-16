@@ -9,7 +9,10 @@ export default async function userGroups (req: Request, res: Response) {
 
     const groups = await prisma.chatGroup.findMany({
       where: {
-        user_id: userIdNum
+        OR: [
+          {user_id: userIdNum},
+          { GroupUsers: { some: {user_id: userIdNum}}}
+        ]
       },
       include: {
         _count: {

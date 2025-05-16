@@ -9,7 +9,7 @@ interface UseWebSocketOptions {
 
 export function useWebSocket({ 
   userId, 
-  userName = `User-${Math.floor(Math.random() * 1000)}`, 
+  userName, 
   serverUrl = "ws://localhost:8080" 
 }: UseWebSocketOptions) {
 
@@ -78,6 +78,16 @@ export function useWebSocket({
     };
   }, [serverUrl]);
 
+  const emitCustomEvent = useCallback((type: WebSocketType, payload: any, roomId: string) => {
+    if(socketRef.current && connected) {
+      const message: WebSocketMessage = {
+        type,
+        payload,
+        roomId: roomId || currentRoomId || undefined
+      };
+      socketRef.current.send(JSON.stringify(message))
+    }
+  }, [connected, currentRoomId])
 
   const joinRoom = useCallback((roomId: string) => {
     if (socketRef.current && connected) {
@@ -148,6 +158,7 @@ export function useWebSocket({
     userCount,
     users,
     currentUser,
-    requestUserList
+    requestUserList,
+    emitCustomEvent
   };
 }

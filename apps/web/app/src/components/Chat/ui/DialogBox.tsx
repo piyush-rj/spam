@@ -8,15 +8,20 @@ import { useSessionStore } from "@/app/zustand/atoms/zustand";
 import { CHAT_GROUP_URL } from "@/lib/api-endpoint";
 import { useRouter } from "next/navigation";
 import MultiStepGroupForm from "./CreateGroupForm";
+import JoinGroupDialog from "./JoinGroupDialog";
 
 const DialogBox = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [groupName, setGroupName] = useState("");
   const [password, setPassword] = useState("");
   const { session } = useSessionStore();
-  const router = useRouter()
+  const [joinPanelOpen, setJoinPanelOpen] = useState(false)
 
-  const handleSubmit = () => {
+  function handleJoin() {
+
+  }
+
+  function handleSubmit() {
     const token = session.user.token;
 
     const result = CreateGroupSchema.safeParse({ title: groupName, passcode: password });
@@ -69,7 +74,7 @@ const DialogBox = () => {
             </h3>
             <InputField label="Group Name" value={groupName} setValue={setGroupName} />
             <InputField label="Password" value={password} setValue={setPassword} />
-            <SubmitButton onClick={handleSubmit} />
+            <SubmitButton text="Create" onClick={handleSubmit} />
           </div>
         </div>
       )}
@@ -87,12 +92,17 @@ const DialogBox = () => {
           Create Group
         </button>
       </div>
-      {/* <button
-        onClick={() => router.push("/groups")}
-        className="px-4 py-2 bg-gradient-to-r from-gray-700 to-gray-900 text-white rounded-md font-medium hover:from-gray-800 hover:to-black transition-all duration-200"
-      >
-        My Groups
-      </button> */}
+
+      <div className="flex justify-center mt-6">
+        <button
+          onClick={() => setJoinPanelOpen(true)}
+          className="px-4 py-2 bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded-md font-medium hover:from-blue-800 hover:to-blue-950 transition-all duration-200"
+        >
+          Join Group
+        </button>
+      </div>
+
+      <JoinGroupDialog isOpen={joinPanelOpen} onClose={() => setJoinPanelOpen(false)} />
 
     </>
   );

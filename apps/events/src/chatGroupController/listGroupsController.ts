@@ -6,10 +6,12 @@ export default async function index(req: Request, res: Response) {
         const user = req.user;
         const user_id = user?.id;
 
+        console.log("hi")
         if (!user_id) {
             res.status(400).json({ message: "userId is required" });
             return
         }
+        console.log("hi2")
 
         const groups = await prisma.chatGroup.findMany({
             where: {
@@ -17,6 +19,7 @@ export default async function index(req: Request, res: Response) {
             },
             orderBy: { createdAt: "desc" }
         });
+        console.log("hi3")
 
         res.status(201).json(groups);
         return;

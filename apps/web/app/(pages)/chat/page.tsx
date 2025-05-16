@@ -1,10 +1,11 @@
 "use client";
 
-import { Home, PlusCircle, Users, User, Settings as SettingsIcon } from "lucide-react";
+import { Home, PlusCircle, Users, User, Settings as SettingsIcon, MessageCircleIcon } from "lucide-react";
 import CreateGroup from "@/app/src/components/Chat/CreateGroup";
 import { useState } from "react";
 import { useSessionStore } from "../../zustand/atoms/zustand";
 import UserGroupsPage from "../groups/[id]/page";
+import ChatPanel from "@/app/src/components/Chat/ChatPanel";
 
 export default function Chat() {
   const [activeTab, setActiveTab] = useState("home");
@@ -49,6 +50,16 @@ export default function Chat() {
           </button>
 
           <button
+            onClick={() => setActiveTab("chat")}
+            className={`flex items-center w-full gap-3 p-3 hover:bg-[#1a1a1a] transition rounded-xl text-md font-medium ${
+              activeTab === "chat" ? "bg-[#1a1a1a]" : ""
+            }`}
+          >
+            <MessageCircleIcon className="w-5 h-5" />
+            Chat
+          </button>
+
+          <button
             onClick={() => setActiveTab("profile")}
             className={`flex items-center w-full gap-3 p-3 hover:bg-[#1a1a1a] transition rounded-xl text-md font-medium mb-2 ${
               activeTab === "profile" ? "bg-[#1a1a1a]" : ""
@@ -58,15 +69,6 @@ export default function Chat() {
             Profile
           </button>
 
-          <button
-            onClick={() => setActiveTab("settings")}
-            className={`flex items-center w-full gap-3 p-3 hover:bg-[#1a1a1a] transition rounded-xl text-md font-medium ${
-              activeTab === "settings" ? "bg-[#1a1a1a]" : ""
-            }`}
-          >
-            <SettingsIcon className="w-5 h-5" />
-            Settings
-          </button>
         </div>
       </div>
 
@@ -103,11 +105,16 @@ export default function Chat() {
           </div>
         )}
 
-        {activeTab === "settings" && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4">Settings</h2>
-            <p>Change your account and app preferences.</p>
-          </div>
+        {activeTab === "chat" && (
+          <ChatPanel 
+            groupId="123" 
+            groupName="test"
+            users={[
+              {id: "1", name: "piyush"},
+              {id: "2", name: "anjan"},
+
+            ]}
+          />
         )}
       </div>
     </div>

@@ -30,20 +30,20 @@ model User {
 
 // created_user
 model ChatGroup {
-  id         String       @id @default(uuid()) @db.Uuid
-  user       User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  user_id    Int
-  title      String       @db.VarChar(191)
-  passcode   String?      @db.VarChar(30)
-  type       GroupType    @default(PUBLIC)
-  createdAt  DateTime     @default(now())
-  image      String?
-  GroupUsers GroupUsers[]
+  id           String       @id @default(uuid()) @db.Uuid
+  user         User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  user_id      Int
+  title        String       @db.VarChar(191)
+  passcode     String?
+  type         GroupType    @default(PUBLIC)
+  createdAt    DateTime     @default(now())
+  image        String?
+  invite_token String       @unique
+  GroupUsers   GroupUsers[]
 
   @@index([createdAt])
   @@map("chat-groups")
 }
-
 
 model GroupUsers {
   id       Int       @id @default(autoincrement())
@@ -51,15 +51,14 @@ model GroupUsers {
   group_id String    @db.Uuid
   user     User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id  Int
-  role      GroupRole   @default(MEMBER)
+  role     GroupRole @default(MEMBER)
 
   createdAt DateTime @default(now())
 }
 
-
 model UserPresence {
-  userId      Int     @id
-  isOnline    Boolean @default(false)
+  userId   Int     @id
+  isOnline Boolean @default(false)
 }
 
 enum GroupType {

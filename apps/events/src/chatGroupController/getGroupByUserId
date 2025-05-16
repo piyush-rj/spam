@@ -1,0 +1,20 @@
+import { Request, Response } from "express";
+import prisma from "@repo/db"
+
+export async function uesrGroups(req: Request, res: Response){
+    try {
+        const { userId } = req.params;
+
+        const groups = await prisma.chatGroup.findMany({
+            where: { id: userId },
+            include: { user: true }
+        })
+
+        if(!groups ) { res.status(400).json({ message: "no groups exist" })}
+
+        res.json({ message: "groups fetched", groups })
+    } catch (error) {
+        console.error("userGroups fetch failed");
+        return
+    }
+}

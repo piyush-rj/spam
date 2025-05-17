@@ -1,5 +1,7 @@
+"use client"
 import { useCallback, useEffect, useRef, useState } from "react";
 import { User, WebSocketMessage, WebSocketType } from "../types/WebSocketTypes";
+import { useSessionStore } from "@/app/zustand/atoms/zustand";
 
 interface UseWebSocketOptions {
   userId: string;
@@ -7,11 +9,12 @@ interface UseWebSocketOptions {
   serverUrl?: string;
 }
 
-export function useWebSocket({ 
-  userId, 
-  userName, 
-  serverUrl = "ws://localhost:8080" 
-}: UseWebSocketOptions) {
+export function useWebSocket() {
+
+  const { session } = useSessionStore();
+  const userId = session.user.id;
+  const userName = session.user.name;
+  const serverUrl = "ws://localhost:8080"
 
   const socketRef = useRef<WebSocket | null>(null);
   const [connected, setConnected] = useState<boolean>(false);
@@ -28,6 +31,7 @@ export function useWebSocket({
 
   useEffect(() => {
     const socket = new WebSocket(serverUrl);
+    console.log("socket instance created")
     socketRef.current = socket;
 
     socket.onopen = () => {
@@ -72,22 +76,12 @@ export function useWebSocket({
 
     return () => {
       if (currentRoomId) {
-        leaveRoom();
+        leaveRoom(currentRoomId);
       }
       socket.close();
     };
   }, [serverUrl]);
 
-  const emitCustomEvent = useCallback((type: WebSocketType, payload: any, roomId: string) => {
-    if(socketRef.current && connected) {
-      const message: WebSocketMessage = {
-        type,
-        payload,
-        roomId: roomId || currentRoomId || undefined
-      };
-      socketRef.current.send(JSON.stringify(message))
-    }
-  }, [connected, currentRoomId])
 
   const joinRoom = useCallback((roomId: string) => {
     if (socketRef.current && connected) {
@@ -106,7 +100,7 @@ export function useWebSocket({
   }, [connected, userId, userName]);
 
 
-  const leaveRoom = useCallback(() => {
+  const leaveRoom = useCallback((roomId: string) => {
     if (socketRef.current && connected && currentRoomId) {
       const payload: WebSocketMessage = {
         type: WebSocketType.unsubscribe,
@@ -159,6 +153,5 @@ export function useWebSocket({
     users,
     currentUser,
     requestUserList,
-    emitCustomEvent
   };
 }

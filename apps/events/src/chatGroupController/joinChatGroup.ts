@@ -55,7 +55,11 @@ export async function joinGroup(req: Request, res: Response) {
       },
     });
 
-    res.status(200).json({ message: "Joined group successfully", group });
+    res.status(200).json({ 
+        message: "Joined group successfully",
+        group,
+        roomId: group.id
+     });
     return;
   } catch (error) {
     console.error("join group error:", error);

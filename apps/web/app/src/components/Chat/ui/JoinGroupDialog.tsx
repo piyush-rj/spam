@@ -5,16 +5,26 @@ import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 import axios from "axios";
 import { useSessionStore } from "@/app/zustand/atoms/zustand";
+import { useWebSocket } from "@/hooks/useWebSocket";
 
 interface JoinGroupDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
+interface GroupReponseData {
+    roomId: string
+}
+
 const JoinGroupDialog = ({ isOpen, onClose }: JoinGroupDialogProps) => {
   const [inviteToken, setInviteToken] = useState("");
   const [passcode, setPasscode] = useState("");
   const { session } = useSessionStore();
+
+  const { joinRoom } = useWebSocket({
+    userId: session.user.id,
+    userName: session.user.name
+  })
 
   async function handleJoin() {
     if (!inviteToken) {
@@ -23,7 +33,7 @@ const JoinGroupDialog = ({ isOpen, onClose }: JoinGroupDialogProps) => {
     }
 
     try {
-      const res = await axios.post("http://localhost:8080/api/group/join", {
+      const res = await axios.post<GroupReponseData>("http://localhost:8080/api/group/join", {
         inviteToken,
         passcode,
       }, {
@@ -34,6 +44,11 @@ const JoinGroupDialog = ({ isOpen, onClose }: JoinGroupDialogProps) => {
       });
 
       console.log("Joined group:", res.data);
+
+      const roomId = res.data.roomId
+      joinRoom(roomId)
+
+      console.log("room joined")
       alert("Successfully joined the group!");
       onClose();
     } catch (error: any) {

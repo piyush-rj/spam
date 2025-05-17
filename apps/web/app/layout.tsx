@@ -6,11 +6,7 @@ import ClientProvider from "./src/ClientProvider";
 import NavbarMain from "./src/components/Dashboard/landing/NavbarMain";
 import { ToastContainer } from 'react-toastify';
 import Providers from "./Providers";
-import { useEffect } from "react";
-import { useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
-import { userSessionAtom } from "./zustand/atoms/zustand";
-import { useSession } from "next-auth/react";
-import { CustomSession } from "./api/auth/[...nextauth]/options";
+import 'react-toastify/dist/ReactToastify.css';
 
 
 const geistSans = localFont({
@@ -36,7 +32,7 @@ export default function RootLayout({
           <Providers>
             <NavbarMain/>
               <ToastContainer 
-                position="top-right"
+                position="bottom-right"
                 autoClose={3000}
                 hideProgressBar={false}
                 newestOnTop={false}

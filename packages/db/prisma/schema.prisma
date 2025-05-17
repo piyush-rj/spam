@@ -22,24 +22,26 @@ model User {
   chatGroups ChatGroup[]
   GroupUsers GroupUsers[]
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  ChatMessage ChatMessage[]
 
   @@map("users")
 }
 
 // created_user
 model ChatGroup {
-  id           String       @id @default(uuid()) @db.Uuid
-  user         User         @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  id           String        @id @default(uuid()) @db.Uuid
+  user         User          @relation(fields: [user_id], references: [id], onDelete: Cascade)
   user_id      Int
-  title        String       @db.VarChar(191)
+  title        String        @db.VarChar(191)
   passcode     String?
-  type         GroupType    @default(PUBLIC)
-  createdAt    DateTime     @default(now())
+  type         GroupType     @default(PUBLIC)
+  createdAt    DateTime      @default(now())
   image        String?
-  invite_token String       @unique
+  invite_token String        @unique
   GroupUsers   GroupUsers[]
+  ChatMessage  ChatMessage[]
 
   @@index([createdAt])
   @@map("chat-groups")
@@ -54,6 +56,16 @@ model GroupUsers {
   role     GroupRole @default(MEMBER)
 
   createdAt DateTime @default(now())
+}
+
+model ChatMessage {
+  id        Int       @id @default(autoincrement())
+  content   String
+  sender    User      @relation(fields: [senderId], references: [id])
+  senderId  Int
+  group     ChatGroup @relation(fields: [groupId], references: [id])
+  groupId   String    @db.Uuid
+  createdAt DateTime  @default(now())
 }
 
 model UserPresence {

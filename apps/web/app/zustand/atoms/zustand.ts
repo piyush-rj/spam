@@ -44,6 +44,14 @@ interface GroupsState {
   error: string | null;
   fetchGroups: (userId: string) => Promise<void>;
 }
+
+interface SocketState {
+  socket: WebSocket | null;
+  setSocket: (socket: WebSocket) => void;
+  closeSocket: () => void;
+};
+
+
 export const useSessionStore = create<UserState>()(
   persist(
     (set) => ({
@@ -73,5 +81,21 @@ export const useGroupsStore = create<GroupsState>((set) => ({
     } finally {
       set({ loading: false });
     }
+  },
+}));
+
+
+
+export const useSocketStore = create<{
+  
+    socket: WebSocket | null;
+    setSocket: (ws: WebSocket) => void;
+    closeSocket: () => void;
+  }>((set, get) => ({
+    socket: null,
+    setSocket: (ws) => set({ socket: ws }),
+    closeSocket: () => {
+      get().socket?.close();
+      set({ socket: null });
   },
 }));

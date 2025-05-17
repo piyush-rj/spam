@@ -24,10 +24,8 @@ const NavbarComponent: React.FC<NavbarProps> = ({
     const { session } = useSessionStore()
     const router = useRouter();
 
-    console.log("session is : ", session)
-
     const name = userName || session?.user?.name;
-    const avatar = session?.user?.image;
+    const avatar = userAvatar || session?.user?.image;
 
     const dropdownRef = useRef<HTMLDivElement>(null);
 

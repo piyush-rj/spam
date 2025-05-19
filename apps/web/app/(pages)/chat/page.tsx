@@ -8,10 +8,13 @@ import UserGroupsPage from "../groups/[id]/page";
 import ChatPanel from "@/app/src/components/Chat/ChatPanel";
 import { useWebSocket } from "@/hooks/useWebSocket";
 import DialogBox from "@/app/src/components/Chat/ui/DialogBox";
+import { useSessionStore } from "@/app/zustand/atoms/zustand";
 
 export default function Chat() {
   const [activeTab, setActiveTab] = useState("home");
   const socket = useWebSocket()
+  const { session } = useSessionStore();
+  const userId = session.user.id;
 
   return (
     <div className="h-screen w-full pt-[80px] flex">

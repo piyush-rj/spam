@@ -2,9 +2,9 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import Link from "next/link";
-import { CHAT_GROUP_URL } from "@/lib/api-endpoint";
+import { CHAT_GROUP_URL } from "@/src/lib/api-endpoint";
 import { useSessionStore } from "@/app/zustand/atoms/zustand";
-import { ChatGroupType } from "@/types/ChatTypes";
+import { ChatGroupType } from "@/src/types/ChatTypes";
 
 type Group = {
   id: string;

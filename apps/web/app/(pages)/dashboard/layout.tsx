@@ -1,7 +1,7 @@
 import "@repo/config/styles"
 import ClientProvider from "../../src/ClientProvider";
-import NavbarMain from "../../src/components/Dashboard/landing/NavbarMain";
-import Providers from "../../Providers";
+import NavbarMain from "../../components/Dashboard/landing/NavbarMain";
+import Providers from "../../../Providers";
 
 
 export default function RootLayout({

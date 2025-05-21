@@ -31,14 +31,15 @@ export default function RootLayout({
         <ClientProvider>
           <Providers>
             <NavbarMain/>
-              <ToastContainer 
-                position="bottom-right"
-                autoClose={3000}
-                hideProgressBar={false}
-                newestOnTop={false}
-                closeOnClick
-                pauseOnHover
-              />
+            <ToastContainer
+              position="bottom-right"
+              autoClose={2000}
+              newestOnTop={false}
+              closeOnClick
+              pauseOnHover
+              toastClassName="!bg-neutral-900 !text-white !rounded-lg !shadow-lg"
+              className="text-sm font-medium"
+            />
               {children}
           </Providers>
         </ClientProvider>

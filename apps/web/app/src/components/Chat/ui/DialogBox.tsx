@@ -1,21 +1,15 @@
 "use client";
 import { useState } from "react";
-import { useSessionStore } from "@/app/zustand/atoms/zustand";
-import { useWebSocket } from "@/hooks/useWebSocket";
-import MultiStepGroupForm from "./CreateGroupForm";
+import MultiStepGroupForm from "./MultiStepGroupForm";
 import JoinGroupDialog from "./JoinGroupDialog";
 
-interface useWebSocketOptions {
-  socket: ReturnType<typeof useWebSocket>
-}
-
-const DialogBox = ({socket}: useWebSocketOptions) => {
+const DialogBox = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [joinPanelOpen, setJoinPanelOpen] = useState(false);
 
   return (
     <>
-      <MultiStepGroupForm isOpen={isOpen} setIsOpen={setIsOpen} socket={socket} />
+      <MultiStepGroupForm isOpen={isOpen} setIsOpen={setIsOpen} />
 
       <div className="flex justify-center mt-6">
         <button

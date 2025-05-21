@@ -5,71 +5,75 @@ import InputField from "./InputField";
 import SubmitButton from "./SubmitButton";
 import axios from "axios";
 import { useSessionStore } from "@/app/zustand/atoms/zustand";
-import { useWebSocket } from "@/hooks/useWebSocket";
+import { useSocket } from "@/src/hooks/useSocket";
 
 interface JoinGroupDialogProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
-interface GroupReponseData {
-    roomId: string
+interface GroupResponseData {
+  roomId: string;
 }
 
 const JoinGroupDialog = ({ isOpen, onClose }: JoinGroupDialogProps) => {
   const [inviteToken, setInviteToken] = useState("");
   const [passcode, setPasscode] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const { session } = useSessionStore();
+  const { subscribeToRoom } = useSocket();
 
-  const { joinRoom } = useWebSocket({
-    userId: session.user.id,
-    userName: session.user.name
-  })
+  const token = session?.user?.token;
 
-  async function handleJoin() {
-    if (!inviteToken) {
-      alert("Invite link is required");
+  const handleJoin = async () => {
+    if (!inviteToken.trim()) {
+      alert("Invite token is required.");
       return;
     }
 
+    setLoading(true);
+
     try {
-      const res = await axios.post<GroupReponseData>("http://localhost:8080/api/group/join", {
-        inviteToken,
-        passcode,
-      }, {
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${session?.user.token}`,
-        },
-      });
+      const response = await axios.post<GroupResponseData>(
+        "http://localhost:8080/api/group/join",
+        { inviteToken, passcode },
+        {
+          headers: {
+            // "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-      console.log("Joined group:", res.data);
+      const { roomId } = response.data;
+      subscribeToRoom(roomId);
 
-      const roomId = res.data.roomId
-      joinRoom(roomId)
-
-      console.log("room joined")
-      alert("Successfully joined the group!");
+      console.log("joined group with roomid: ", roomId);
       onClose();
+      setInviteToken("");
+      setPasscode("");
     } catch (error: any) {
-      console.error("Error joining group:", error.response?.data || error.message);
-      alert(error.response?.data?.message || "Failed to join group");
+      console.log("Error joining group:", error.response?.data || error.message);
+      alert(error.response?.data?.message || "Failed to join group.");
+    } finally {
+      setLoading(false);
     }
-  }
+  };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-10">
-      <div className="bg-[#141414] border border-[#333] p-8 rounded-lg shadow-lg w-max">
+      <div className="bg-[#141414] border border-[#333] p-8 rounded-lg shadow-lg w-[90%] max-w-md">
 
-        {/* close button */}
+        {/* Close Button */}
         <div className="flex w-full justify-end -mt-2">
-          <div className="relative group h-4 w-4 bg-red-500 rounded-full hover:bg-red-600 transition-all duration-200 cursor-pointer">
-            <span
-              onClick={onClose}
-              className="absolute inset-0 flex items-center justify-center text-black text-md pb-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-            >
+          <div
+            className="relative group h-4 w-4 bg-red-500 rounded-full hover:bg-red-600 cursor-pointer"
+            onClick={onClose}
+          >
+            <span className="absolute inset-0 flex items-center justify-center text-black text-md opacity-0 group-hover:opacity-100 transition-opacity">
               ×
             </span>
           </div>
@@ -79,9 +83,21 @@ const JoinGroupDialog = ({ isOpen, onClose }: JoinGroupDialogProps) => {
           Join a Group
         </h3>
 
-        <InputField label="Invite Token" value={inviteToken} setValue={setInviteToken} />
-        <InputField label="Passcode (if any)" value={passcode} setValue={setPasscode} />
-        <SubmitButton text="Join" onClick={handleJoin} />
+        <InputField
+          label="Invite Token"
+          value={inviteToken}
+          setValue={setInviteToken}
+        />
+        <InputField
+          label="Passcode (if any)"
+          value={passcode}
+          setValue={setPasscode}
+        />
+
+        <SubmitButton
+          text={loading ? "Joining..." : "Join"}
+          onClick={handleJoin}
+        />
       </div>
     </div>
   );

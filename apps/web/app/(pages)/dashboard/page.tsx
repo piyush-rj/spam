@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
-import Footer from '../../src/components/Dashboard/landing/Footer';
-import Hero from '../../src/components/Dashboard/landing/Hero';
-import Features from '../../src/components/Dashboard/landing/Features';
+import Footer from '@/app/src/components/Dashboard/landing/Footer';
+import Hero from '@/app/src/components/Dashboard/landing/Hero';
+import Features from '@/app/src/components/Dashboard/landing/Features';
 
 
 export default function Home() {

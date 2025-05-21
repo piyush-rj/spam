@@ -1,7 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { CustomSession } from '../../api/auth/[...nextauth]/options';
+import type { CustomSession } from '../../../../web/app/api/auth/[...nextauth]/options';
 import axios from 'axios';
+import { WebSocketClient } from '@/src/lib/socket.front';
 
 interface UserState {
   session: CustomSession | null;
@@ -45,12 +46,16 @@ interface GroupsState {
   fetchGroups: (userId: string) => Promise<void>;
 }
 
-interface SocketState {
-  socket: WebSocket | null;
-  setSocket: (socket: WebSocket) => void;
-  closeSocket: () => void;
-};
+type ConnectionState = "connected" | "connecting" | "disconnected" | "reconnecting";
 
+interface SocketClientState {
+  socketClient: WebSocketClient | null;
+  connectionState: ConnectionState;
+  isReady: boolean;
+  setSocketClient: (client: WebSocketClient) => void;
+  clearSocketClient: () => void;
+  initializeSocketClient: () => void;
+}
 
 export const useSessionStore = create<UserState>()(
   persist(
@@ -61,14 +66,13 @@ export const useSessionStore = create<UserState>()(
       clearSession: () => set({ session: null }),
     }),
     {
-      name: 'userSessionZustand', 
+      name: 'userSessionZustand',
     }
   )
 );
 
-
 export const useGroupsStore = create<GroupsState>((set) => ({
-  groups: [], 
+  groups: [],
   loading: false,
   error: null,
   fetchGroups: async (userId: string) => {
@@ -84,18 +88,35 @@ export const useGroupsStore = create<GroupsState>((set) => ({
   },
 }));
 
-
-
-export const useSocketStore = create<{
-  
-    socket: WebSocket | null;
-    setSocket: (ws: WebSocket) => void;
-    closeSocket: () => void;
-  }>((set, get) => ({
-    socket: null,
-    setSocket: (ws) => set({ socket: ws }),
-    closeSocket: () => {
-      get().socket?.close();
-      set({ socket: null });
+export const useSocketStore = create<SocketClientState>((set, get) => ({
+  socketClient: null,
+  connectionState: "disconnected",
+  isReady: false,
+  setSocketClient(client) {
+    set({ socketClient: client })
   },
+  clearSocketClient() {
+    set({ socketClient: null, connectionState: "disconnected", isReady: false })
+  },
+  initializeSocketClient() {
+    if(get().socketClient) return;
+
+    const client = new WebSocketClient("ws://localhost:8080");
+
+    set({ socketClient: client, connectionState: client.getState(), isReady: client.isReady() });
+
+    client.on("connect", () => {
+      set({ connectionState: "connected", isReady: true } )
+    });
+    client.on("disconnect", () => {
+      set({ connectionState: client.getState(), isReady: false })
+    });
+    client.on("reconnecting", () => {
+      set({ connectionState: "reconnecting", isReady: false })
+    })
+  }
+
 }));
+
+
+

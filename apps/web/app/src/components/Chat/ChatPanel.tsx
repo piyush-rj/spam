@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSessionStore } from "@/app/zustand/atoms/zustand";
+import { useEffect, useState } from "react";
 
 interface User {
   id: string;
@@ -17,33 +18,111 @@ interface Message {
 interface ChatPanelProps {
   groupId: string;
   groupName: string;
-  users: User[];
+
+  sendMessage: (type: string, payload: any) => void;
+  useSubscribe: (type: string, handler: (payload: any) => void) => void;
+  subscribeToRoom: (roomId: string) => void;
+  unsubscribeFromRoom: (roomId: string) => void;
+  isReady: boolean;
+  connectionState: "connected" | "reconnecting" | "connecting" | "disconnected";
 }
 
-export default function ChatPanel({ groupId, groupName, users }: ChatPanelProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    // Dummy initial messages
-    {
-      id: "m1",
-      sender: { id: "u1", name: "Alice" },
-      content: "Welcome to the chat!",
-      timestamp: new Date(),
-    },
-  ]);
+export default function ChatPanel({
+  groupId,
+  groupName,
+  sendMessage,
+  useSubscribe,
+  subscribeToRoom,
+  unsubscribeFromRoom,
+  isReady,
+  connectionState,
+}: ChatPanelProps) {
+  const { session } = useSessionStore();
+
+  if (!session?.user?.id || !session.user.name) {
+    console.log("Invalid user session");
+    return <div>Please log in to chat.</div>;
+  }
+
+  const currentUser: User = {
+    id: session.user.id,
+    name: session.user.name,
+  };
+
+  const [users, setUsers] = useState<User[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
 
-  // This would be replaced with actual socket or API logic
-  function handleSendMessage() {
+  useEffect(() => {
+    // Join room on mount
+    subscribeToRoom(groupId);
+    sendMessage("chat:join", {
+      roomId: groupId,
+      user: currentUser,
+    });
+
+    // Leave room on unmount
+    return () => {
+      sendMessage("chat:leave", {
+        roomId: groupId,
+        userId: currentUser.id,
+      });
+      unsubscribeFromRoom(groupId);
+    };
+  }, [groupId, currentUser.id, currentUser.name, sendMessage, subscribeToRoom, unsubscribeFromRoom]);
+
+  // Subscribe to message events
+  useSubscribe("chat:message", (msg: Message) => {
+    setMessages((prev) => [...prev, msg]);
+  });
+
+  // Subscribe to users list update event
+  useSubscribe("chat:users", (updatedUsers: User[]) => {
+    setUsers(updatedUsers);
+  });
+
+  // Subscribe to user joined event
+  useSubscribe("chat:user:joined", (user: User) => {
+    setUsers((prev) => {
+      if (prev.find((u) => u.id === user.id)) return prev;
+      return [...prev, user];
+    });
+  });
+
+  // Subscribe to user left event
+  useSubscribe("chat:user:left", (userId: string) => {
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+  });
+
+  const handleSendMessage = () => {
     if (!newMessage.trim()) return;
 
     const message: Message = {
       id: `m${Date.now()}`,
-      sender: { id: "u_current", name: "You" },
+      sender: currentUser,
       content: newMessage.trim(),
       timestamp: new Date(),
     };
+
+    sendMessage("chat:message", {
+      roomId: groupId,
+      message,
+    });
+
     setMessages((prev) => [...prev, message]);
     setNewMessage("");
+  };
+
+  if (!isReady) {
+    return <div className="p-4 text-center text-gray-400">Connecting...</div>;
+  }
+
+  if (connectionState !== "connected") {
+    return (
+      <div className="p-4 text-center text-yellow-400">
+        Connection status: {connectionState}
+      </div>
+    );
   }
 
   return (
@@ -61,7 +140,10 @@ export default function ChatPanel({ groupId, groupName, users }: ChatPanelProps)
             <div className="text-sm text-gray-300 font-semibold">{msg.sender.name}</div>
             <div className="text-white">{msg.content}</div>
             <div className="text-xs text-gray-500">
-              {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              {new Date(msg.timestamp).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </div>
           </div>
         ))}

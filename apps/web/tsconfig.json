@@ -19,7 +19,7 @@
     "next.config.js",
     ".next/types/**/*.ts",
     "app/src/components/DashboardLeftButtons/RedBtn"
-  ],
+, "app/Providers.tsx"  ],
   "exclude": [
     "node_modules"
   ],

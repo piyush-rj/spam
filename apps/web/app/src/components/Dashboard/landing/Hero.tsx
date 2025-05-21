@@ -5,6 +5,7 @@ import Button from '../ui/Button';
 import AnimatedText from '../ui/AnimatedText';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { toast } from 'react-toastify';
 
 export default function Hero() {
   const heroRef = useRef<HTMLDivElement>(null);
@@ -40,8 +41,7 @@ export default function Hero() {
     if (session ){
       router.push("/chat")
     } else {
-      // add toast here
-      alert("please signin to continue")
+      toast.error("Please sign in to continue")
     }
   }
   

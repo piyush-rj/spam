@@ -1,4 +1,4 @@
-import { ChatPayload, WebSocketMessage } from "@/types/WebSocketTypes";
+import { ChatPayload, WebSocketMessage } from "@/src/types/WebSocketTypes";
 
 
 export class WebSocketManager {

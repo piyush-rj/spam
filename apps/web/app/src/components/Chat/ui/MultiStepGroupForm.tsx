@@ -1,18 +1,18 @@
 "use client";
+
 import { useState } from "react";
 import InputField from "./InputField";
-import { validateGroup } from "@/app/validation/CreateGroupValidation";
+import { validateGroup } from "../../../../validation/CreateGroupValidation";
 import axios from "axios";
 import { useSessionStore } from "@/app/zustand/atoms/zustand"; 
 import { useRouter } from "next/navigation";
-import { CHAT_GROUP_URL } from "@/lib/api-endpoint";
-import { useWebSocket } from "@/hooks/useWebSocket";
+import { CHAT_GROUP_URL } from "@/src/lib/api-endpoint";
+import { useSocket } from "../../../../../src/hooks/useSocket";
 import { toast } from "react-toastify";
 
 interface MultiStepGroupFormProps {
   isOpen: boolean;
   setIsOpen: (value: boolean) => void;
-  socket: ReturnType<typeof useWebSocket>;
 }
 
 interface GroupResponseData {
@@ -23,7 +23,7 @@ interface GroupResponseData {
   user_id: string;
 }
 
-const MultiStepGroupForm = ({ isOpen, setIsOpen, socket }: MultiStepGroupFormProps) => {
+const MultiStepGroupForm = ({ isOpen, setIsOpen }: MultiStepGroupFormProps) => {
   const [step, setStep] = useState(1);
   const [groupName, setGroupName] = useState("");
   const [isPrivate, setIsPrivate] = useState(false);
@@ -33,7 +33,7 @@ const MultiStepGroupForm = ({ isOpen, setIsOpen, socket }: MultiStepGroupFormPro
 
   const { session } = useSessionStore();
   const router = useRouter();
-  const { joinRoom } = socket;
+  const { subscribeToRoom } = useSocket();
 
   const resetForm = () => {
     setStep(1);
@@ -105,12 +105,6 @@ const MultiStepGroupForm = ({ isOpen, setIsOpen, socket }: MultiStepGroupFormPro
         }
       );
 
-      if (!response) {
-        throw new Error("Failed to create group");
-      }
-
-      const roomId = response.data.roomId;
-      joinRoom(roomId);
 
       toast.success("Group Created");
       setIsOpen(false);
@@ -133,7 +127,7 @@ const MultiStepGroupForm = ({ isOpen, setIsOpen, socket }: MultiStepGroupFormPro
             className="relative group h-4 w-4 bg-red-500 rounded-full hover:bg-red-600 transition-all duration-200 cursor-pointer"
             onClick={() => {
               setIsOpen(false);
-              resetForm();
+              setTimeout(resetForm, 300)
             }}
           >
             <span className="absolute inset-0 flex items-center justify-center text-[#000] text-md pb-0.5 opacity-0 group-hover:opacity-100 transition-opacity">

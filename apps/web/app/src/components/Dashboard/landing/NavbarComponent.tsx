@@ -1,10 +1,10 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
-import SignIn from '../../../../auth/signin/page';
+import SignIn from '@/app/auth/signin/page';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useSessionStore } from '../../../../zustand/atoms/zustand';
+import { useSessionStore } from '@/app/zustand/atoms/zustand';
 
 
 export interface NavbarProps {

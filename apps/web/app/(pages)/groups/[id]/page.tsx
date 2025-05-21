@@ -1,11 +1,13 @@
 "use client";
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { useSessionStore } from '@/app/zustand/atoms/zustand';
 import { Eye, EyeOff, MoreVertical } from "lucide-react";
 import { toast } from 'react-toastify';
-import { useWebSocket } from '@/hooks/useWebSocket';
+import { useSocket } from '@/src/hooks/useSocket';
+import JoinGroupDialog from '@/app/src/components/Chat/ui/JoinGroupDialog';
 
 interface GroupUser {
   id: number;
@@ -36,24 +38,26 @@ interface ChatGroup {
 
 interface UserGroupsPageProps {
   userId: string;
-  socket: ReturnType<typeof useWebSocket>;
 }
 
-const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, socket }) => {
+const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId }) => {
   const [groups, setGroups] = useState<ChatGroup[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [visiblePasswords, setVisiblePasswords] = useState<{ [groupId: string]: boolean }>({});
   const [editPanelGroupId, setEditPanelGroupId] = useState<string | null>(null);
   const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState<string | null>(null);
+  const [updatePanelGroupId, setUpdatePanelGroupId] = useState<string | null>(null);
+  const [updateForm, setUpdateForm] = useState<{ title: string; passcode?: string }>({ title: '', passcode: '' });
 
   const { session } = useSessionStore();
-  const router = useRouter();
   const token = session.user.token;
-  const userIdNum = session.user.id;
+  const userIdNum = session.user?.id;
   const avatar = session.user.image;
 
-  const { leaveRoom } = socket
+  const { subscribeToRoom } = useSocket()
+
+  const { unsubscribeFromRoom } = useSocket();
 
   useEffect(() => {
     const fetchUserGroups = async () => {
@@ -63,6 +67,7 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, socket }) => {
           `http://localhost:8080/api/my-groups/${userIdNum}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
+        
         setGroups(response.data);
         setError(null);
       } catch (err) {
@@ -73,23 +78,59 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, socket }) => {
       }
     };
     fetchUserGroups();
-  }, [userIdNum]);
+  }, [userIdNum, token]);
 
   const handleDeleteGroup = async (groupId: string) => {
     try {
       await axios.delete(`http://localhost:8080/api/group/${groupId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      leaveRoom(groupId);
-      console.log("room deleted: ", groupId)
-
+      unsubscribeFromRoom(groupId);
       setGroups((prev) => prev.filter((group) => group.id !== groupId));
       setConfirmDeleteGroupId(null);
       toast.success("Group deleted successfully!");
     } catch (error) {
       console.error("Failed to delete group:", error);
       toast.error("Failed to delete group. Try again.");
+    }
+  };
+
+  const handleJoin = async() => {
+    try {
+
+      // const 
+      // const roomId = response.data.roomId;
+      
+      // if (roomId) {
+      //   subscribeToRoom(roomId);
+      //   router.refresh();
+      // }
+
+      // console.log("subscribed to room: ", roomId)
+    } catch (error) {
+      
+    }
+  }
+
+  const handleUpdateGroup = async (groupId: string) => {
+    try {
+      await axios.put(
+        `http://localhost:8080/api/group/${groupId}`,
+        { title: updateForm.title, passcode: updateForm.passcode },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setGroups((prev) =>
+        prev.map((group) =>
+          group.id === groupId
+            ? { ...group, title: updateForm.title, passcode: updateForm.passcode || '' }
+            : group
+        )
+      );
+      toast.success("Group updated!");
+      setUpdatePanelGroupId(null);
+    } catch (error) {
+      console.error("Failed to update group:", error);
+      toast.error("Failed to update group.");
     }
   };
 
@@ -102,11 +143,7 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, socket }) => {
   }
 
   if (error) {
-    return (
-      <div className="p-4 bg-red-50 text-red-700 rounded-md">
-        {error}
-      </div>
-    );
+    return <div className="p-4 bg-red-50 text-red-700 rounded-md">{error}</div>;
   }
 
   return (
@@ -116,15 +153,14 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, socket }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {groups.map((group) => (
-            <div key={group.id} className="relative bg-[#101010] p-6 rounded-lg shadow-md">
+            <div onClick={handleJoin} key={group.id} className="relative bg-[#101010] hover:shadow-md hover:shadow-[#1f1f1f] transition-shadow duration-200 p-6 rounded-lg shadow-md">
               <div className="flex justify-between">
                 <div>
                   <h2 className="text-white font-bold text-lg mb-1">{group.title}</h2>
-                  <span className={`text-xs px-2 py-1 rounded ${
-                    group.type === "PRIVATE"
+                  <span className={`text-xs px-2 py-1 rounded ${group.type === "PRIVATE"
                       ? "bg-red-600/20 text-red-400"
                       : "bg-blue-600/20 text-blue-300"
-                  }`}>
+                    }`}>
                     {group.type}
                   </span>
                   <p className="text-gray-400 text-sm mt-1">
@@ -135,26 +171,28 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, socket }) => {
                       <span className="text-gray-200">
                         {visiblePasswords[group.id] ? group.passcode : '••••••'}
                       </span>
-                      <button onClick={() => {
+                      <button
+                      title='view password'
+                      onClick={() =>
                         setVisiblePasswords((prev) => ({
                           ...prev,
                           [group.id]: !prev[group.id],
-                        }));
-                      }}>
+                        }))
+                      }>
                         {visiblePasswords[group.id] ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
                     </div>
                   )}
                 </div>
                 <button
-                  className="text-white p-1"
+                  title='Edit group'
+                  className="text-white absolute top-8 right-5"
                   onClick={() => setEditPanelGroupId(editPanelGroupId === group.id ? null : group.id)}
                 >
                   <MoreVertical />
                 </button>
               </div>
 
-              {/* Group avatar */}
               <div className="mt-4 flex justify-between items-center">
                 <span className="text-sm text-green-400">
                   {group.GroupUsers?.length || 0} members
@@ -170,25 +208,35 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, socket }) => {
 
               {/* Dropdown menu */}
               {editPanelGroupId === group.id && (
-                <div className="absolute top-16 right-6 bg-[#1f1f1f] p-2 rounded shadow-lg z-20">
+                <div className="absolute top-16 right-6 bg-[#1f1f1f] p-3 rounded shadow-lg z-20">
                   <button
-                    className="text-white text-sm hover:text-blue-400 block mb-2"
+                    className="text-white text-md hover:text-[#c5c5c5] block mb-2"
+                    onClick={() => {
+                      setUpdatePanelGroupId(group.id);
+                      setUpdateForm({ title: group.title, passcode: group.passcode });
+                      setEditPanelGroupId(null);
+                    }}
+                  >
+                    Update
+                  </button>
+                  <button
+                    className="text-white text-md hover:text-[#c5c5c5] block mb-2"
                     onClick={() => {
                       navigator.clipboard.writeText(group.invite_token);
                       toast.success("Invite link copied!");
                       setEditPanelGroupId(null);
                     }}
                   >
-                    Copy Invite Link
+                    Copy
                   </button>
                   <button
-                    className="text-sm text-red-500 hover:text-red-600 block"
+                    className="text-md text-red-500 hover:text-red-600 block"
                     onClick={() => {
-                      setEditPanelGroupId(null);
                       setConfirmDeleteGroupId(group.id);
+                      setEditPanelGroupId(null);
                     }}
                   >
-                    Delete Group
+                    Delete
                   </button>
                 </div>
               )}
@@ -196,20 +244,63 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, socket }) => {
               {/* Confirm delete modal */}
               {confirmDeleteGroupId === group.id && (
                 <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-                  <div className="bg-[#1a1a1a] text-white p-6 rounded-lg shadow-lg">
-                    <p className="mb-4">Are you sure you want to delete <strong>{group.title}</strong>?</p>
-                    <div className="flex justify-end gap-4">
+                  <div className="bg-[#1a1a1a] text-white p-7 rounded-lg shadow-lg">
+                    <p className="mb-4 text-md text-[#e4e4e4]">
+                      Are you sure you want to delete <span className='font-semibold text-white'>{group.title}</span>?
+                    </p>
+                    <div className="flex justify-center gap-4">
                       <button
-                        className="px-4 py-2 bg-gray-600 rounded hover:bg-gray-700"
+                        className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-700/80 hover:text-[#e4e4e4] transition-colors duration-150"
                         onClick={() => setConfirmDeleteGroupId(null)}
                       >
                         Cancel
                       </button>
                       <button
-                        className="px-4 py-2 bg-red-600 rounded hover:bg-red-700"
+                        className="px-4 py-2 bg-red-700/60 rounded hover:text-[#e4e4e4] hover:bg-red-700/50 transition-colors duration-150"
                         onClick={() => handleDeleteGroup(group.id)}
                       >
                         Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Update modal */}
+              {updatePanelGroupId === group.id && (
+                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+                  <div className="bg-[#1a1a1a] text-white p-7 rounded-lg shadow-lg min-w-[300px]">
+                    <p className="mb-4 text-[#e4e4e4] text-[20px] font-medium">Update <span className="font-semibold">{group.title}</span></p>
+                    <div className="flex flex-col gap-4 mb-4">
+                      <input
+                        type="text"
+                        className="px-3 py-2 rounded bg-[#2a2a2a] text-white focus:outline-none"
+                        placeholder="Group Title"
+                        value={updateForm.title}
+                        onChange={(e) => setUpdateForm({ ...updateForm, title: e.target.value })}
+                      />
+                      {group.type === "PRIVATE" && (
+                        <input
+                          type="text"
+                          className="px-3 py-2 rounded bg-[#2a2a2a] text-white focus:outline-none"
+                          placeholder="Passcode"
+                          value={updateForm.passcode}
+                          onChange={(e) => setUpdateForm({ ...updateForm, passcode: e.target.value })}
+                        />
+                      )}
+                    </div>
+                    <div className="flex justify-between gap-6 mt-10">
+                      <button
+                        className="px-4 py-2 bg-gray-700 rounded hover:text-[#e4e4e4] hover:bg-gray-700/80 transition-colors duration-150"
+                        onClick={() => setUpdatePanelGroupId(null)}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        className="px-4 py-2 bg-blue-700 rounded hover:text-[#e4e4e4] hover:bg-blue-700/80 transition-colors duration-150"
+                        onClick={() => handleUpdateGroup(group.id)}
+                      >
+                        Save
                       </button>
                     </div>
                   </div>

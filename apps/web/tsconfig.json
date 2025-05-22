@@ -18,8 +18,8 @@
     "next-env.d.ts",
     "next.config.js",
     ".next/types/**/*.ts",
-    "app/src/components/DashboardLeftButtons/RedBtn"
-, "app/Providers.tsx"  ],
+    "../frontend/app/src/components/DashboardLeftButtons/RedBtn"
+, "../frontend/app/Providers.tsx"  ],
   "exclude": [
     "node_modules"
   ],

@@ -62,6 +62,8 @@ const MultiStepGroupForm = ({ isOpen, setIsOpen }: MultiStepGroupFormProps) => {
       setLoading(true);
       setError("");
 
+      if(!session || !session.user) return;
+
       const token = session.user.token;
       const type = isPrivate ? "PRIVATE" : "PUBLIC";
 

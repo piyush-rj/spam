@@ -8,7 +8,7 @@ import { useSessionStore } from '@/app/zustand/atoms/zustand';
 
 
 export interface NavbarProps {
-    userName?: string;
+    userName?: string | undefined ;
     userAvatar?: string | null;
     isAuthenticated: boolean;
 }
@@ -89,7 +89,7 @@ const NavbarComponent: React.FC<NavbarProps> = ({
                                 {avatar && (
                                     <img
                                         src={avatar}
-                                        alt={name}
+                                        alt={name || ""}
                                         onClick={() => setDropdownOpen(!dropdownOpen)}
                                         className="h-[35px] w-[35px] rounded-full border border-black cursor-pointer"
                                     />

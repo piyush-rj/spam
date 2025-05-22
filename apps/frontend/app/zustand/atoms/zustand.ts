@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { CustomSession } from '../../../../web/app/api/auth/[...nextauth]/options';
+import type { CustomSession } from '../../api/auth/[...nextauth]/options';
 import axios from 'axios';
 import { WebSocketClient } from '@/src/lib/socket.front';
 

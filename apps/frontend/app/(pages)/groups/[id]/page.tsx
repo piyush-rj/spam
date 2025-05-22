@@ -2,12 +2,10 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 import { useSessionStore } from '@/app/zustand/atoms/zustand';
 import { Eye, EyeOff, MoreVertical } from "lucide-react";
 import { toast } from 'react-toastify';
 import { useSocket } from '@/src/hooks/useSocket';
-import JoinGroupDialog from '@/app/src/components/Chat/ui/JoinGroupDialog';
 
 interface GroupUser {
   id: number;
@@ -51,9 +49,10 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId }) => {
   const [updateForm, setUpdateForm] = useState<{ title: string; passcode?: string }>({ title: '', passcode: '' });
 
   const { session } = useSessionStore();
-  const token = session.user.token;
-  const userIdNum = session.user?.id;
-  const avatar = session.user.image;
+  console.log(session)
+  const token = session?.user?.token;
+  const userIdNum = session?.user?.id;
+  const avatar = session?.user?.image;
 
   const { subscribeToRoom } = useSocket()
 
@@ -98,15 +97,15 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId }) => {
   const handleJoin = async() => {
     try {
 
-      // const 
-      // const roomId = response.data.roomId;
+      const 
+      const roomId = response.data.roomId;
       
-      // if (roomId) {
-      //   subscribeToRoom(roomId);
-      //   router.refresh();
-      // }
+      if (roomId) {
+        subscribeToRoom(roomId);
+        router.refresh();
+      }
 
-      // console.log("subscribed to room: ", roomId)
+      console.log("subscribed to room: ", roomId)
     } catch (error) {
       
     }

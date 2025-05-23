@@ -57,6 +57,13 @@ interface SocketClientState {
   initializeSocketClient: () => void;
 }
 
+interface ChatState {
+  activeGroupId: string | null;
+  activeGroupName: string | null;
+  setGroup: (id: string, name: string) => void;
+  resetGroup: () => void;
+}
+
 export const useSessionStore = create<UserState>()(
   persist(
     (set) => ({
@@ -117,6 +124,15 @@ export const useSocketStore = create<SocketClientState>((set, get) => ({
   }
 
 }));
+
+
+export const useChatStore = create<ChatState>((set) => ({
+  activeGroupId: null,
+  activeGroupName: null,
+  setGroup: (id, name) => set({ activeGroupId: id, activeGroupName: name }),
+  resetGroup: () => set({ activeGroupId: null, activeGroupName: null})
+}))
+
 
 
 

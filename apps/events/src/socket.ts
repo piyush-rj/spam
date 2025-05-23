@@ -205,12 +205,12 @@ export class WebSocketClass {
     const clientSubs = this.clientSubscriptions.get(clientId);
     if (!clientSubs) return;
 
-    // Find all subscriptions for this room
+
     const roomSubscriptions = Array.from(clientSubs)
       .filter(key => key.startsWith(`${room}:`));
 
-    // Unsubscribe from each topic
-    roomSubscriptions.forEach(subKey => {
+
+      roomSubscriptions.forEach(subKey => {
       const [roomId, event] = subKey.split(':');
       this.unsubscribeClientFromTopic(clientId, roomId, event as EventType);
     });

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { useSessionStore } from '@/app/zustand/atoms/zustand';
+import { useChatStore, useSessionStore } from '@/app/zustand/atoms/zustand';
 import { Eye, EyeOff, MoreVertical } from "lucide-react";
 import { toast } from 'react-toastify';
 import { useSocket } from '@/src/hooks/useSocket';
@@ -36,9 +36,10 @@ interface ChatGroup {
 
 interface UserGroupsPageProps {
   userId: string;
+  onJoinGroup?: (groupId: string, groupName: string) => void;
 }
 
-const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId }) => {
+const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, onJoinGroup }) => {
   const [groups, setGroups] = useState<ChatGroup[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +50,6 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId }) => {
   const [updateForm, setUpdateForm] = useState<{ title: string; passcode?: string }>({ title: '', passcode: '' });
 
   const { session } = useSessionStore();
-  console.log(session)
   const token = session?.user?.token;
   const userIdNum = session?.user?.id;
   const avatar = session?.user?.image;
@@ -94,20 +94,14 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId }) => {
     }
   };
 
-  const handleJoin = async() => {
-    try {
-
-      const 
-      const roomId = response.data.roomId;
-      
-      if (roomId) {
-        subscribeToRoom(roomId);
-        router.refresh();
-      }
-
-      console.log("subscribed to room: ", roomId)
-    } catch (error) {
-      
+  const handleJoin = async(groupId: string, groupName: string) => {
+    subscribeToRoom(groupId);
+    console.log(`subscribe to room, groupId: ${groupId}`)
+    useChatStore.getState().setGroup(groupId, groupName);
+    
+    toast.success(`Joined group ${groupId}`);
+    if(onJoinGroup){
+      onJoinGroup(groupId, groupName);
     }
   }
 
@@ -152,7 +146,7 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId }) => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
           {groups.map((group) => (
-            <div onClick={handleJoin} key={group.id} className="relative bg-[#101010] hover:shadow-md hover:shadow-[#1f1f1f] transition-shadow duration-200 p-6 rounded-lg shadow-md">
+            <div onClick={() => handleJoin(group.id, group.title)} key={group.id} className="relative bg-[#101010] z-10 hover:shadow-md hover:shadow-[#1f1f1f] transition-shadow duration-200 p-6 rounded-lg shadow-md">
               <div className="flex justify-between">
                 <div>
                   <h2 className="text-white font-bold text-lg mb-1">{group.title}</h2>
@@ -172,11 +166,12 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId }) => {
                       </span>
                       <button
                       title='view password'
-                      onClick={() =>
+                      onClick={(e) =>{
+                        e.stopPropagation();
                         setVisiblePasswords((prev) => ({
                           ...prev,
                           [group.id]: !prev[group.id],
-                        }))
+                        }))}
                       }>
                         {visiblePasswords[group.id] ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
@@ -185,8 +180,11 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId }) => {
                 </div>
                 <button
                   title='Edit group'
-                  className="text-white absolute top-8 right-5"
-                  onClick={() => setEditPanelGroupId(editPanelGroupId === group.id ? null : group.id)}
+                  className="text-white absolute top-8 right-5 z-30 rounded-full hover:text-neutral-300 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditPanelGroupId(editPanelGroupId === group.id ? null : group.id)
+                  }}
                 >
                   <MoreVertical />
                 </button>
@@ -210,7 +208,8 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId }) => {
                 <div className="absolute top-16 right-6 bg-[#1f1f1f] p-3 rounded shadow-lg z-20">
                   <button
                     className="text-white text-md hover:text-[#c5c5c5] block mb-2"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       setUpdatePanelGroupId(group.id);
                       setUpdateForm({ title: group.title, passcode: group.passcode });
                       setEditPanelGroupId(null);
@@ -220,7 +219,8 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId }) => {
                   </button>
                   <button
                     className="text-white text-md hover:text-[#c5c5c5] block mb-2"
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       navigator.clipboard.writeText(group.invite_token);
                       toast.success("Invite link copied!");
                       setEditPanelGroupId(null);

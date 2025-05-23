@@ -1,18 +1,16 @@
 "use client";
 
-import {
-  Home, PlusCircle, Users, User, MessageCircleIcon
-} from "lucide-react";
-import { useEffect, useState } from "react";
+import { Home, PlusCircle, Users, User, MessageCircleIcon } from "lucide-react";
+import { useState } from "react";
 import UserGroupsPage from "../groups/[id]/page";
 import ChatPanel from "@/app/src/components/Chat/ChatPanel";
 import DialogBox from "@/app/src/components/Chat/ui/DialogBox";
-import { useSessionStore, useSocketStore } from "@/app/zustand/atoms/zustand";
-import { WebSocketClient } from "@/src/lib/socket.front";
+import { useChatStore, useSessionStore, useSocketStore } from "@/app/zustand/atoms/zustand";
 import { useSocket } from "@/src/hooks/useSocket";
 
 export default function Chat() {
   const [activeTab, setActiveTab] = useState("home");
+  const { activeGroupId, activeGroupName } = useChatStore();
 
 
   const { sendMessage, useSubscribe, subscribeToRoom, unsubscribeFromRoom, isReady, connectionState } = useSocket();
@@ -67,17 +65,22 @@ export default function Chat() {
           <div>
             <h2 className="text-xl font-semibold mb-4">My Groups</h2>
             {userId ? (
-              <UserGroupsPage userId={userId} />
+              <UserGroupsPage userId={userId} onJoinGroup={(groupId: string, groupName: string) => {
+                useChatStore.getState().setGroup(groupId, groupName)
+                setActiveTab("chat");
+
+                console.log(`Joined grp with room id: ${groupId}`)
+              }}/>
             ) : (
               <p className="text-gray-400">Please sign in to view your groups</p>
             )}
           </div>
         )}
 
-        {activeTab === "chat" && (
+        {activeTab === "chat" && activeGroupId && activeGroupName && (
           <ChatPanel
-          groupId="123"
-          groupName="Test Group"
+          groupId={activeGroupId}
+          groupName={activeGroupName}
           sendMessage={sendMessage}
           useSubscribe={useSubscribe}
           subscribeToRoom={subscribeToRoom}

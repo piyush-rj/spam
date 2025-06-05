@@ -1,15 +1,15 @@
 import { Server as HTTPServer } from 'http';
 import WebSocket from 'ws';
 import { v4 as uuidv4 } from 'uuid';
+import prisma from '@repo/db';
 
 type ClientId = string;
-type EventType = 'insert' | 'edit' | 'delete' | 'read' | string;
+type EventType = 'chat:join' | 'chat:leave' | 'chat:message' | 'chat:user:joined' | 'chat:user:left';
 type RoomId = string;
 
 interface WSMessage {
-  type: 'subscribe' | 'unsubscribe' | 'publish' | 'dashboard';
+  type: EventType | 'subscribe' | 'unsubscribe' | 'publish' | 'dashboard';
   room?: RoomId;
-  event?: EventType;
   data?: any;
 }
 
@@ -22,19 +22,25 @@ export class WebSocketClass {
   private subscriptions: Map<SubscriptionKey, Set<ClientId>>;
   private clientSubscriptions: Map<ClientId, Set<SubscriptionKey>>;
 
+  // NEW: map clientId to user info {userId, name}
+  private clientUserMap: Map<ClientId, { userId: string; name: string }>;
+
+  // Keep track of users currently in rooms for presence broadcasts
+  private roomUsers: Map<RoomId, Set<string>>; // roomId -> set of userIds
+
   constructor(server: HTTPServer) {
     this.wss = new WebSocket.Server({ server });
     this.clients = new Map();
     this.subscriptions = new Map();
     this.clientSubscriptions = new Map();
+    this.clientUserMap = new Map();
+    this.roomUsers = new Map();
 
     this.init();
   }
 
   private init(): void {
-
     this.wss.on('connection', (ws: WebSocket) => {
-
       const clientId = uuidv4();
       this.clients.set(clientId, ws);
       this.clientSubscriptions.set(clientId, new Set());
@@ -47,7 +53,6 @@ export class WebSocketClass {
         try {
           const parsedMessage: WSMessage = JSON.parse(message);
           this.handleMessage(clientId, parsedMessage);
-
         } catch (error) {
           console.error('Error parsing message:', error);
           ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
@@ -60,9 +65,7 @@ export class WebSocketClass {
     });
   }
 
-
-  // subacribe, unsubscribe, publish (notifications), dashboard
-  private handleMessage(clientId: ClientId, message: WSMessage): void {
+  private async handleMessage(clientId: ClientId, message: WSMessage): Promise<void> {
     const client = this.clients.get(clientId);
 
     if (!client) {
@@ -71,7 +74,6 @@ export class WebSocketClass {
     }
 
     switch (message.type) {
-
       case 'dashboard':
         client.send(JSON.stringify({
           type: 'dashboard_connected',
@@ -80,38 +82,103 @@ export class WebSocketClass {
         break;
 
       case 'subscribe':
-        if (!message.room || !message.event) {
+        if (!message.room) {
           client.send(JSON.stringify({
             type: 'error',
-            message: 'Room and event are required for subscription'
+            message: 'Room is required for subscription'
           }));
           return;
         }
 
-        this.subscribeClientToTopic(clientId, message.room, message.event);
+        ['chat:message', 'chat:user:joined', 'chat:user:left'].forEach(eventType => {
+          this.subscribeClientToTopic(clientId, message.room!, eventType as EventType);
+        });
         break;
 
       case 'unsubscribe':
-        if (message.room && message.event) {
-          // Unsubscribe from specific room/event
-          this.unsubscribeClientFromTopic(clientId, message.room, message.event);
-        } else if (message.room && !message.event) {
+        if (message.room) {
           this.unsubscribeClientFromRoom(clientId, message.room);
         } else {
           this.unsubscribeClientFromAllTopics(clientId);
         }
         break;
 
-      case 'publish':
-        if (!message.room || !message.event) {
-          client.send(JSON.stringify({
-            type: 'error',
-            message: 'Room and event are required for publishing'
-          }));
+      case 'chat:join':
+        if (!message.room || !message.data?.userId || !message.data?.name) {
+          client.send(JSON.stringify({ type: 'error', message: 'Room, userId and name required for chat:join' }));
+          return;
+        }
+        // Save client user info mapping
+        this.clientUserMap.set(clientId, { userId: message.data.userId, name: message.data.name });
+
+        // Add user to room user set
+        if (!this.roomUsers.has(message.room)) {
+          this.roomUsers.set(message.room, new Set());
+        }
+        this.roomUsers.get(message.room)!.add(message.data.userId);
+
+        // Subscribe client to room chat events
+        ['chat:message', 'chat:user:joined', 'chat:user:left'].forEach(eventType => {
+          this.subscribeClientToTopic(clientId, message.room!, eventType as EventType);
+        });
+
+        // Notify others in the room that a user joined
+        this.publishToTopic(message.room, 'chat:user:joined', { userId: message.data.userId, name: message.data.name }, clientId);
+        break;
+
+      case 'chat:leave':
+        if (!message.room) {
+          client.send(JSON.stringify({ type: 'error', message: 'Room is required for chat:leave' }));
+          return;
+        }
+        const userInfo = this.clientUserMap.get(clientId);
+        if (userInfo && this.roomUsers.has(message.room)) {
+          this.roomUsers.get(message.room)!.delete(userInfo.userId);
+
+          // Notify others in the room user left
+          this.publishToTopic(message.room, 'chat:user:left', userInfo.userId, clientId);
+        }
+
+        // Remove user from clientUserMap (optionally, if client leaves all rooms)
+        this.clientUserMap.delete(clientId);
+
+        // Unsubscribe client from all chat events in this room
+        this.unsubscribeClientFromRoom(clientId, message.room);
+        break;
+
+      case 'chat:message':
+        if (!message.room || !message.data?.content) {
+          client.send(JSON.stringify({ type: 'error', message: 'Room and content required for chat:message' }));
+          return;
+        }
+        // Get user info from client map
+        const sender = this.clientUserMap.get(clientId);
+        if (!sender) {
+          client.send(JSON.stringify({ type: 'error', message: 'User not joined in any room' }));
           return;
         }
 
-        this.publishToTopic(message.room, message.event, message.data, clientId);
+        // Save message to DB
+        try {
+          await prisma.chatMessage.create({
+            data: {
+              groupId: message.room,
+              senderId: Number(sender.userId), // Adjust if your userId is string, use string instead
+              content: message.data.content
+            }
+          });
+        } catch (error) {
+          console.error('DB error saving message:', error);
+        }
+
+        // Broadcast message to subscribers (including sender)
+        this.publishToTopic(message.room, 'chat:message', {
+          id: uuidv4(),
+          sender: { id: sender.userId, name: sender.name },
+          content: message.data.content,
+          timestamp: new Date().toISOString()
+        }, clientId);
+
         break;
 
       default:
@@ -122,19 +189,13 @@ export class WebSocketClass {
     }
   }
 
-
   private getSubscriptionKey(room: RoomId, event: EventType): SubscriptionKey {
     return `${room}:${event}`;
   }
-  
 
   private subscribeClientToTopic(clientId: ClientId, room: RoomId, event: EventType): void {
     const client = this.clients.get(clientId);
-
-    if (!client) {
-      console.error(`Client not found: ${clientId}`);
-      return;
-    }
+    if (!client) return;
 
     const subscriptionKey = this.getSubscriptionKey(room, event);
 
@@ -143,11 +204,7 @@ export class WebSocketClass {
     }
     this.subscriptions.get(subscriptionKey)!.add(clientId);
 
-    // Add to client subscriptions map
     this.clientSubscriptions.get(clientId)!.add(subscriptionKey);
-
-    console.log("----------------------------------------------------------------------------------->")
-    console.log("subscription: ", this.subscriptions, "\n client subscriptions: ", this.clientSubscriptions)
 
     client.send(JSON.stringify({
       type: 'subscribed',
@@ -161,15 +218,10 @@ export class WebSocketClass {
 
   private unsubscribeClientFromTopic(clientId: ClientId, room: RoomId, event: EventType): void {
     const client = this.clients.get(clientId);
-
-    if (!client) {
-      console.error(`Client not found: ${clientId}`);
-      return;
-    }
+    if (!client) return;
 
     const subscriptionKey = this.getSubscriptionKey(room, event);
 
-    // Remove from subscriptions map
     const subscribers = this.subscriptions.get(subscriptionKey);
     if (subscribers) {
       subscribers.delete(clientId);
@@ -178,7 +230,6 @@ export class WebSocketClass {
       }
     }
 
-    // Remove from client subscriptions map
     const clientSubs = this.clientSubscriptions.get(clientId);
     if (clientSubs) {
       clientSubs.delete(subscriptionKey);
@@ -195,112 +246,64 @@ export class WebSocketClass {
   }
 
   private unsubscribeClientFromRoom(clientId: ClientId, room: RoomId): void {
-    const client = this.clients.get(clientId);
-
-    if (!client) {
-      console.error(`Client not found: ${clientId}`);
-      return;
-    }
-
-    const clientSubs = this.clientSubscriptions.get(clientId);
-    if (!clientSubs) return;
-
-
-    const roomSubscriptions = Array.from(clientSubs)
-      .filter(key => key.startsWith(`${room}:`));
-
-
-      roomSubscriptions.forEach(subKey => {
-      const [roomId, event] = subKey.split(':');
-      this.unsubscribeClientFromTopic(clientId, roomId, event as EventType);
+    ['chat:message', 'chat:user:joined', 'chat:user:left'].forEach(event => {
+      this.unsubscribeClientFromTopic(clientId, room, event as EventType);
     });
-
-    client.send(JSON.stringify({
-      type: 'unsubscribed_room',
-      room,
-      message: `Unsubscribed from all events in room ${room}`
-    }));
   }
 
   private unsubscribeClientFromAllTopics(clientId: ClientId): void {
-    const client = this.clients.get(clientId);
-
-    if (!client) {
-      console.error(`Client not found: ${clientId}`);
-      return;
-    }
-
     const clientSubs = this.clientSubscriptions.get(clientId);
     if (!clientSubs) return;
 
-    // Make a copy of the subscriptions to avoid iterator issues
-    const subscriptions = Array.from(clientSubs);
+    for (const subscriptionKey of clientSubs) {
+      const subscribers = this.subscriptions.get(subscriptionKey);
+      if (subscribers) {
+        subscribers.delete(clientId);
+        if (subscribers.size === 0) this.subscriptions.delete(subscriptionKey);
+      }
+    }
 
-    // Unsubscribe from each topic
-    subscriptions.forEach(subKey => {
-      const [room, event] = subKey.split(':');
-      this.unsubscribeClientFromTopic(clientId, room, event as EventType);
-    });
-
-    client.send(JSON.stringify({
-      type: 'unsubscribed_all',
-      message: 'Unsubscribed from all topics'
-    }));
+    clientSubs.clear();
   }
 
-
-
-  private publishToTopic(room: RoomId, event: EventType, data: any, senderId: ClientId): void {
+  private publishToTopic(room: RoomId, event: EventType, data: any, exceptClientId?: ClientId): void {
     const subscriptionKey = this.getSubscriptionKey(room, event);
     const subscribers = this.subscriptions.get(subscriptionKey);
 
-    if (!subscribers || subscribers.size === 0) {
-      console.log(`No subscribers for ${subscriptionKey}`);
-      return;
-    }
+    if (!subscribers) return;
 
-    const message = JSON.stringify({
-      type: 'message',
-      room,
-      event,
-      data,
-      timestamp: new Date().toISOString()
-    });
+    const message = JSON.stringify({ type: event, room, data });
 
-    subscribers.forEach(clientId => {
-      // Don't send the message back to the sender if they're also subscribed
-      if (clientId !== senderId) {
-        const client = this.clients.get(clientId);
-        if (client && client.readyState === WebSocket.OPEN) {
-          client.send(message);
-        }
+    for (const clientId of subscribers) {
+      if (clientId === exceptClientId) continue;
+      const client = this.clients.get(clientId);
+      if (client && client.readyState === WebSocket.OPEN) {
+        client.send(message);
       }
-    });
-
-    console.log(`Published to ${subscriptionKey}, received by ${subscribers.size - (subscribers.has(senderId) ? 1 : 0)} clients`);
+    }
   }
-
 
   private handleDisconnect(clientId: ClientId): void {
-    // Unsubscribe from all topics
+    console.log(`Client disconnected: ${clientId}`);
+
+    // Remove from clients map
+    this.clients.delete(clientId);
+
+    // Remove from subscriptions
     this.unsubscribeClientFromAllTopics(clientId);
 
-    // Clean up client data
-    this.clients.delete(clientId);
-    this.clientSubscriptions.delete(clientId);
-
-    console.log(`Client disconnected: ${clientId}`);
-  }
-
-  
-  // Public method to broadcast to all connected clients
-  public broadcastAll(message: any): void {
-    const messageStr = JSON.stringify(message);
-    this.clients.forEach(client => {
-      if (client.readyState === WebSocket.OPEN) {
-        client.send(messageStr);
+    // Remove user from roomUsers and broadcast leave event if needed
+    const userInfo = this.clientUserMap.get(clientId);
+    if (userInfo) {
+      for (const [room, users] of this.roomUsers.entries()) {
+        if (users.has(userInfo.userId)) {
+          users.delete(userInfo.userId);
+          this.publishToTopic(room, 'chat:user:left', userInfo.userId, clientId);
+        }
       }
-    });
+      this.clientUserMap.delete(clientId);
+    }
+
+    this.clientSubscriptions.delete(clientId);
   }
 }
-

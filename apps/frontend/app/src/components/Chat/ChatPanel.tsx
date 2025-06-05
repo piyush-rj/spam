@@ -37,8 +37,9 @@ export default function ChatPanel({
   isReady,
   connectionState,
 }: ChatPanelProps) {
-  const { session } = useSessionStore();
 
+
+  const { session } = useSessionStore();
   if (!session?.user?.id || !session.user.name) {
     console.log("Invalid user session");
     return <div>Please log in to chat.</div>;
@@ -58,7 +59,7 @@ export default function ChatPanel({
     subscribeToRoom(groupId);
     sendMessage("chat:join", {
       roomId: groupId,
-      user: currentUser,
+      user: currentUser.id,
     });
 
     // Leave room on unmount
@@ -69,7 +70,7 @@ export default function ChatPanel({
       });
       unsubscribeFromRoom(groupId);
     };
-  }, [groupId, currentUser.id, currentUser.name, sendMessage, subscribeToRoom, unsubscribeFromRoom]);
+  }, [groupId, currentUser.id, currentUser.name]);
 
   // Subscribe to message events
   useSubscribe("chat:message", (msg: Message) => {

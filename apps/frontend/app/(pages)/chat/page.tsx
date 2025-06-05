@@ -1,26 +1,32 @@
 "use client";
 
 import { Home, PlusCircle, Users, User, MessageCircleIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import UserGroupsPage from "../groups/[id]/page";
 import ChatPanel from "@/app/src/components/Chat/ChatPanel";
 import DialogBox from "@/app/src/components/Chat/ui/DialogBox";
-import { useChatStore, useSessionStore, useSocketStore } from "@/app/zustand/atoms/zustand";
+import { useActiveUsersStore, useChatStore, useSessionStore, useSocketStore } from "@/app/zustand/atoms/zustand";
 import { useSocket } from "@/src/hooks/useSocket";
 
 export default function Chat() {
   const [activeTab, setActiveTab] = useState("home");
   const { activeGroupId, activeGroupName } = useChatStore();
-
-
-  const { sendMessage, useSubscribe, subscribeToRoom, unsubscribeFromRoom, isReady, connectionState } = useSocket();
-  
-
   const { session } = useSessionStore();
   const userId = session?.user?.id;
+  const { sendMessage, useSubscribe, subscribeToRoom, unsubscribeFromRoom, isReady, connectionState } = useSocket();
+  const { setUserActive, setUserInactive } = useActiveUsersStore();
 
-  const { setSocketClient, clearSocketClient } = useSocketStore();
+  useEffect(() => {
+    if (!activeGroupId || !session?.user?.id) return;
 
+    subscribeToRoom(activeGroupId);
+    setUserActive(activeGroupId, session.user.id);
+
+    return () => {
+      unsubscribeFromRoom(activeGroupId);
+      setUserInactive(activeGroupId, session?.user?.id);
+    }
+  }, [activeGroupId, session?.user?.id])
 
   return (
     <div className="h-screen w-full pt-[80px] flex">
@@ -37,9 +43,8 @@ export default function Chat() {
             <button
               key={key}
               onClick={() => setActiveTab(key)}
-              className={`flex items-center w-full gap-3 p-3 hover:bg-[#1a1a1a] transition rounded-xl text-md font-medium mb-2 ${
-                activeTab === key ? "bg-[#1a1a1a]" : ""
-              }`}
+              className={`flex items-center w-full gap-3 p-3 hover:bg-[#1a1a1a] transition rounded-xl text-md font-medium mb-2 ${activeTab === key ? "bg-[#1a1a1a]" : ""
+                }`}
             >
               <Icon className="w-5 h-5" />
               {label}
@@ -65,12 +70,13 @@ export default function Chat() {
           <div>
             <h2 className="text-xl font-semibold mb-4">My Groups</h2>
             {userId ? (
-              <UserGroupsPage userId={userId} onJoinGroup={(groupId: string, groupName: string) => {
-                useChatStore.getState().setGroup(groupId, groupName)
-                setActiveTab("chat");
-
-                console.log(`Joined grp with room id: ${groupId}`)
-              }}/>
+              <UserGroupsPage
+                onJoinGroup={(groupId: string, groupName: string) => {
+                  useChatStore.getState().setGroup(groupId, groupName);
+                  setActiveTab("chat");
+                  console.log(`Joined group with room id: ${groupId}`);
+                }}
+              />
             ) : (
               <p className="text-gray-400">Please sign in to view your groups</p>
             )}
@@ -79,15 +85,15 @@ export default function Chat() {
 
         {activeTab === "chat" && activeGroupId && activeGroupName && (
           <ChatPanel
-          groupId={activeGroupId}
-          groupName={activeGroupName}
-          sendMessage={sendMessage}
-          useSubscribe={useSubscribe}
-          subscribeToRoom={subscribeToRoom}
-          unsubscribeFromRoom={unsubscribeFromRoom}
-          isReady={isReady}
-          connectionState={connectionState}
-        />
+            groupId={activeGroupId}
+            groupName={activeGroupName}
+            sendMessage={sendMessage}
+            useSubscribe={useSubscribe}
+            subscribeToRoom={subscribeToRoom}
+            unsubscribeFromRoom={unsubscribeFromRoom}
+            isReady={isReady}
+            connectionState={connectionState}
+          />
         )}
 
         {activeTab === "profile" && (

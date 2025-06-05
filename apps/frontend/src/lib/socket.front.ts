@@ -36,7 +36,7 @@ export class WebSocketClient {
 
       // Resubscribe to rooms after reconnect
       this.subscribedRooms.forEach((roomId) => {
-        this.send("subscribe room", { roomId });
+        this.send("subscribe room", { room: roomId, event: "edit" });
       });
 
       this.emit("connect");
@@ -99,7 +99,7 @@ export class WebSocketClient {
   public send(type: string, payload: any) {
     const message = {
       type,
-      payload,
+      ...payload,
       timestamp: Date.now(),
     };
 
@@ -126,17 +126,17 @@ export class WebSocketClient {
     };
   }
 
-  public subscribeToRoom(roomId: string) {
+  public subscribeToRoom(roomId: string, event: string = "edit") {
     if (!this.subscribedRooms.has(roomId)) {
       this.subscribedRooms.add(roomId);
-      this.send("subscribe room", { roomId });
+      this.send("subscribe", { room: roomId, event });
     }
   }
 
-  public unsubscribeFromRoom(roomId: string) {
+  public unsubscribeFromRoom(roomId: string, event: string = "edit") {
     if (this.subscribedRooms.has(roomId)) {
       this.subscribedRooms.delete(roomId);
-      this.send("unsubscribe room", { roomId });
+      this.send("unsubscribe", { room: roomId, event });
     }
   }
 

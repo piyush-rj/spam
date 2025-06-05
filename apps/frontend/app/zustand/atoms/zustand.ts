@@ -64,6 +64,15 @@ interface ChatState {
   resetGroup: () => void;
 }
 
+
+interface ActiveUsersState {
+  activeUsers: Record<string, string[]>;
+  setUserActive: (roomId: string, userId: string) => void;
+  setUserInactive: (roomId: string, userId: string | null | undefined) => void;
+  clearRoomUsers: (roomId: string) => void;
+}
+
+
 export const useSessionStore = create<UserState>()(
   persist(
     (set) => ({
@@ -125,7 +134,6 @@ export const useSocketStore = create<SocketClientState>((set, get) => ({
 
 }));
 
-
 export const useChatStore = create<ChatState>((set) => ({
   activeGroupId: null,
   activeGroupName: null,
@@ -133,6 +141,41 @@ export const useChatStore = create<ChatState>((set) => ({
   resetGroup: () => set({ activeGroupId: null, activeGroupName: null})
 }))
 
+export const useActiveUsersStore = create<ActiveUsersState>((set) => ({
+  activeUsers: {},
+
+  setUserActive: (roomId, userId) =>
+    set((state) => {
+      const existing = state.activeUsers[roomId] || [];
+      if (!existing.includes(userId)) {
+        return {
+          activeUsers: {
+            ...state.activeUsers,
+            [roomId]: [...existing, userId],
+          },
+        };
+      }
+      return state;
+    }),
+
+  setUserInactive: (roomId, userId) =>
+    set((state) => {
+      const updatedUsers = (state.activeUsers[roomId] || []).filter((id) => id !== userId);
+      return {
+        activeUsers: {
+          ...state.activeUsers,
+          [roomId]: updatedUsers,
+        },
+      };
+    }),
+
+  clearRoomUsers: (roomId) =>
+    set((state) => {
+      const updated = { ...state.activeUsers };
+      delete updated[roomId];
+      return { activeUsers: updated };
+    }),
+}));
 
 
 

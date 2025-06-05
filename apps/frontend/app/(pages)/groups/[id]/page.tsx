@@ -35,15 +35,14 @@ interface ChatGroup {
 }
 
 interface UserGroupsPageProps {
-  userId: string;
   onJoinGroup?: (groupId: string, groupName: string) => void;
 }
 
-const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, onJoinGroup }) => {
+const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ onJoinGroup }) => {
   const [groups, setGroups] = useState<ChatGroup[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [visiblePasswords, setVisiblePasswords] = useState<{ [groupId: string]: boolean }>({});
+  const [visiblePasswords, setVisiblePasswords] = useState<Record<string, boolean>>({});
   const [editPanelGroupId, setEditPanelGroupId] = useState<string | null>(null);
   const [confirmDeleteGroupId, setConfirmDeleteGroupId] = useState<string | null>(null);
   const [updatePanelGroupId, setUpdatePanelGroupId] = useState<string | null>(null);
@@ -54,21 +53,19 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, onJoinGroup }) 
   const userIdNum = session?.user?.id;
   const avatar = session?.user?.image;
 
-  const { subscribeToRoom } = useSocket()
-
-  const { unsubscribeFromRoom } = useSocket();
+  const { subscribeToRoom, unsubscribeFromRoom } = useSocket();
 
   useEffect(() => {
     const fetchUserGroups = async () => {
+      if (!token || !userIdNum) return;
+
       try {
         setLoading(true);
         const response = await axios.get<ChatGroup[]>(
           `http://localhost:8080/api/my-groups/${userIdNum}`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        
         setGroups(response.data);
-        setError(null);
       } catch (err) {
         console.error("Error fetching groups:", err);
         setError("Failed to load your groups.");
@@ -76,10 +73,23 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, onJoinGroup }) 
         setLoading(false);
       }
     };
+
     fetchUserGroups();
   }, [userIdNum, token]);
 
+  const handleJoin = (groupId: string, groupName: string) => {
+    subscribeToRoom(groupId);
+    useChatStore.getState().setGroup(groupId, groupName);
+    toast.success(`Joined group ${groupName}`);
+
+    if (onJoinGroup) {
+      onJoinGroup(groupId, groupName);
+    }
+  };
+
   const handleDeleteGroup = async (groupId: string) => {
+    if (!token) return;
+
     try {
       await axios.delete(`http://localhost:8080/api/group/${groupId}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -88,24 +98,15 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, onJoinGroup }) 
       setGroups((prev) => prev.filter((group) => group.id !== groupId));
       setConfirmDeleteGroupId(null);
       toast.success("Group deleted successfully!");
-    } catch (error) {
-      console.error("Failed to delete group:", error);
-      toast.error("Failed to delete group. Try again.");
+    } catch (err) {
+      console.error("Delete failed:", err);
+      toast.error("Failed to delete group.");
     }
   };
 
-  const handleJoin = async(groupId: string, groupName: string) => {
-    subscribeToRoom(groupId);
-    console.log(`subscribe to room, groupId: ${groupId}`)
-    useChatStore.getState().setGroup(groupId, groupName);
-    
-    toast.success(`Joined group ${groupId}`);
-    if(onJoinGroup){
-      onJoinGroup(groupId, groupName);
-    }
-  }
-
   const handleUpdateGroup = async (groupId: string) => {
+    if (!token) return;
+
     try {
       await axios.put(
         `http://localhost:8080/api/group/${groupId}`,
@@ -114,15 +115,13 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, onJoinGroup }) 
       );
       setGroups((prev) =>
         prev.map((group) =>
-          group.id === groupId
-            ? { ...group, title: updateForm.title, passcode: updateForm.passcode || '' }
-            : group
+          group.id === groupId ? { ...group, title: updateForm.title, passcode: updateForm.passcode || '' } : group
         )
       );
       toast.success("Group updated!");
       setUpdatePanelGroupId(null);
-    } catch (error) {
-      console.error("Failed to update group:", error);
+    } catch (err) {
+      console.error("Update failed:", err);
       toast.error("Failed to update group.");
     }
   };
@@ -130,7 +129,7 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, onJoinGroup }) 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-gray-900" />
       </div>
     );
   }
@@ -145,168 +144,173 @@ const UserGroupsPage: React.FC<UserGroupsPageProps> = ({ userId, onJoinGroup }) 
         <p className="text-center text-gray-500 text-lg">You haven't created any groups yet.</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-          {groups.map((group) => (
-            <div onClick={() => handleJoin(group.id, group.title)} key={group.id} className="relative bg-[#101010] z-10 hover:shadow-md hover:shadow-[#1f1f1f] transition-shadow duration-200 p-6 rounded-lg shadow-md">
-              <div className="flex justify-between">
-                <div>
-                  <h2 className="text-white font-bold text-lg mb-1">{group.title}</h2>
-                  <span className={`text-xs px-2 py-1 rounded ${group.type === "PRIVATE"
-                      ? "bg-red-600/20 text-red-400"
-                      : "bg-blue-600/20 text-blue-300"
-                    }`}>
-                    {group.type}
-                  </span>
-                  <p className="text-gray-400 text-sm mt-1">
-                    Created on {new Date(group.createdAt).toLocaleDateString()}
-                  </p>
-                  {group.type === "PRIVATE" && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-gray-200">
-                        {visiblePasswords[group.id] ? group.passcode : '••••••'}
-                      </span>
-                      <button
-                      title='view password'
-                      onClick={(e) =>{
-                        e.stopPropagation();
-                        setVisiblePasswords((prev) => ({
-                          ...prev,
-                          [group.id]: !prev[group.id],
-                        }))}
-                      }>
-                        {visiblePasswords[group.id] ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <button
-                  title='Edit group'
-                  className="text-white absolute top-8 right-5 z-30 rounded-full hover:text-neutral-300 cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditPanelGroupId(editPanelGroupId === group.id ? null : group.id)
-                  }}
-                >
-                  <MoreVertical />
-                </button>
-              </div>
+          {groups.map((group) => {
+            const isPrivate = group.type === "PRIVATE";
+            const passwordVisible = visiblePasswords[group.id];
 
-              <div className="mt-4 flex justify-between items-center">
-                <span className="text-sm text-green-400">
-                  {group.GroupUsers?.length || 0} members
-                </span>
-                <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-700">
-                  {group.image ? (
-                    <img src={group.image} alt="Group avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <img src={avatar || ''} alt="Default" />
-                  )}
-                </div>
-              </div>
-
-              {/* Dropdown menu */}
-              {editPanelGroupId === group.id && (
-                <div className="absolute top-16 right-6 bg-[#1f1f1f] p-3 rounded shadow-lg z-20">
-                  <button
-                    className="text-white text-md hover:text-[#c5c5c5] block mb-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setUpdatePanelGroupId(group.id);
-                      setUpdateForm({ title: group.title, passcode: group.passcode });
-                      setEditPanelGroupId(null);
-                    }}
-                  >
-                    Update
-                  </button>
-                  <button
-                    className="text-white text-md hover:text-[#c5c5c5] block mb-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigator.clipboard.writeText(group.invite_token);
-                      toast.success("Invite link copied!");
-                      setEditPanelGroupId(null);
-                    }}
-                  >
-                    Copy
-                  </button>
-                  <button
-                    className="text-md text-red-500 hover:text-red-600 block"
-                    onClick={() => {
-                      setConfirmDeleteGroupId(group.id);
-                      setEditPanelGroupId(null);
-                    }}
-                  >
-                    Delete
-                  </button>
-                </div>
-              )}
-
-              {/* Confirm delete modal */}
-              {confirmDeleteGroupId === group.id && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-                  <div className="bg-[#1a1a1a] text-white p-7 rounded-lg shadow-lg">
-                    <p className="mb-4 text-md text-[#e4e4e4]">
-                      Are you sure you want to delete <span className='font-semibold text-white'>{group.title}</span>?
+            return (
+              <div
+                key={group.id}
+                onClick={(e) => {
+                  const target = e.target as HTMLElement;
+                  if (target.closest("button") || target.closest(".no-join")) return;
+                  handleJoin(group.id, group.title);
+                }}
+                className="relative bg-[#101010] hover:shadow-md hover:shadow-[#1f1f1f] transition-shadow duration-200 p-6 rounded-lg"
+              >
+                <div className="flex justify-between">
+                  <div>
+                    <h2 className="text-white font-bold text-lg mb-1">{group.title}</h2>
+                    <span className={`text-xs px-2 py-1 rounded ${isPrivate ? "bg-red-600/20 text-red-400" : "bg-blue-600/20 text-blue-300"}`}>
+                      {group.type}
+                    </span>
+                    <p className="text-gray-400 text-sm mt-1">
+                      Created on {new Date(group.createdAt).toLocaleDateString()}
                     </p>
-                    <div className="flex justify-center gap-4">
-                      <button
-                        className="px-4 py-2 bg-gray-700 rounded hover:bg-gray-700/80 hover:text-[#e4e4e4] transition-colors duration-150"
-                        onClick={() => setConfirmDeleteGroupId(null)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="px-4 py-2 bg-red-700/60 rounded hover:text-[#e4e4e4] hover:bg-red-700/50 transition-colors duration-150"
-                        onClick={() => handleDeleteGroup(group.id)}
-                      >
-                        Delete
-                      </button>
-                    </div>
+                    {isPrivate && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className="text-gray-200">{passwordVisible ? group.passcode : '••••••'}</span>
+                        <button
+                          title="Toggle password visibility"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setVisiblePasswords((prev) => ({
+                              ...prev,
+                              [group.id]: !prev[group.id],
+                            }));
+                          }}
+                        >
+                          {passwordVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    title="Edit group"
+                    className="text-white absolute top-8 right-5 z-30 hover:text-neutral-300 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditPanelGroupId(editPanelGroupId === group.id ? null : group.id);
+                    }}
+                  >
+                    <MoreVertical />
+                  </button>
+                </div>
+
+                <div className="mt-4 flex justify-between items-center">
+                  <span className="text-sm text-green-400">{group.GroupUsers?.length || 0} members</span>
+                  <div className="h-10 w-10 rounded-full overflow-hidden bg-gray-700">
+                    <img
+                      src={group.image || avatar || '/default-avatar.png'}
+                      alt="Group avatar"
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 </div>
-              )}
 
-              {/* Update modal */}
-              {updatePanelGroupId === group.id && (
-                <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
-                  <div className="bg-[#1a1a1a] text-white p-7 rounded-lg shadow-lg min-w-[300px]">
-                    <p className="mb-4 text-[#e4e4e4] text-[20px] font-medium">Update <span className="font-semibold">{group.title}</span></p>
-                    <div className="flex flex-col gap-4 mb-4">
+                {/* Dropdown */}
+                {editPanelGroupId === group.id && (
+                  <div className="absolute top-16 right-6 bg-[#1f1f1f] p-3 rounded shadow-lg z-20">
+                    <button
+                      className="text-white text-md hover:text-[#c5c5c5] block mb-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setUpdatePanelGroupId(group.id);
+                        setUpdateForm({ title: group.title, passcode: group.passcode });
+                        setEditPanelGroupId(null);
+                      }}
+                    >
+                      Update
+                    </button>
+                    <button
+                      className="text-white text-md hover:text-[#c5c5c5] block mb-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigator.clipboard.writeText(`${window.location.origin}/invite/${group.invite_token}`);
+                        toast.success("Invite link copied!");
+                        setEditPanelGroupId(null);
+                      }}
+                    >
+                      Copy
+                    </button>
+                    <button
+                      className="text-md text-red-500 hover:text-red-600 block"
+                      onClick={() => {
+                        setConfirmDeleteGroupId(group.id);
+                        setEditPanelGroupId(null);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                )}
+
+                {/* Confirm Delete */}
+                {confirmDeleteGroupId === group.id && (
+                  <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1000]">
+                    <div className="bg-[#1a1a1a] text-white p-7 rounded-lg shadow-lg">
+                      <p className="mb-4 text-md">Are you sure you want to delete <strong>{group.title}</strong>?</p>
+                      <div className="flex justify-center gap-4">
+                        <button onClick={() => setConfirmDeleteGroupId(null)} className="bg-gray-700 px-4 py-2 rounded hover:bg-gray-600">
+                          Cancel
+                        </button>
+                        <button onClick={() => handleDeleteGroup(group.id)} className="bg-red-600 px-4 py-2 rounded hover:bg-red-500">
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Update Modal */}
+                {updatePanelGroupId === group.id && (
+                  <div 
+                  className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-[1000]"
+                  onClick={(e) => {setUpdatePanelGroupId(null)}}
+                  >
+                    <div 
+                    className="bg-[#1a1a1a] text-white p-7 rounded-lg shadow-lg min-w-[300px]"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                    >
+                      <p className="mb-4 text-lg font-semibold">Update {group.title}</p>
                       <input
                         type="text"
-                        className="px-3 py-2 rounded bg-[#2a2a2a] text-white focus:outline-none"
+                        className="w-full px-3 py-2 mb-4 rounded bg-[#2a2a2a] text-white"
                         placeholder="Group Title"
                         value={updateForm.title}
-                        onChange={(e) => setUpdateForm({ ...updateForm, title: e.target.value })}
+                        onChange={(e) => {
+                          // e.preventDefault();
+                          setUpdateForm({ ...updateForm, title: e.target.value })}
+                        }
                       />
-                      {group.type === "PRIVATE" && (
+                      {isPrivate && (
                         <input
                           type="text"
-                          className="px-3 py-2 rounded bg-[#2a2a2a] text-white focus:outline-none"
+                          className="w-full px-3 py-2 mb-4 rounded bg-[#2a2a2a] text-white"
                           placeholder="Passcode"
                           value={updateForm.passcode}
-                          onChange={(e) => setUpdateForm({ ...updateForm, passcode: e.target.value })}
+                          onChange={(e) => {
+                            e.preventDefault();
+                            setUpdateForm({ ...updateForm, passcode: e.target.value })}
+                        }
                         />
                       )}
-                    </div>
-                    <div className="flex justify-between gap-6 mt-10">
-                      <button
-                        className="px-4 py-2 bg-gray-700 rounded hover:text-[#e4e4e4] hover:bg-gray-700/80 transition-colors duration-150"
-                        onClick={() => setUpdatePanelGroupId(null)}
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        className="px-4 py-2 bg-blue-700 rounded hover:text-[#e4e4e4] hover:bg-blue-700/80 transition-colors duration-150"
-                        onClick={() => handleUpdateGroup(group.id)}
-                      >
-                        Save
-                      </button>
+                      <div className="flex justify-between gap-4 mt-6">
+                        <button onClick={() => setUpdatePanelGroupId(null)} className="bg-gray-700 px-4 py-2 rounded hover:bg-gray-600">
+                          Cancel
+                        </button>
+                        <button onClick={() => handleUpdateGroup(group.id)} className="bg-blue-600 px-4 py-2 rounded hover:bg-blue-500">
+                          Save
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>

@@ -22,9 +22,10 @@ model User {
   chatGroups ChatGroup[]
   GroupUsers GroupUsers[]
 
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  ChatMessage ChatMessage[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  ChatMessage  ChatMessage[]
+  UserPresence UserPresence[]
 
   @@map("users")
 }
@@ -66,10 +67,11 @@ model ChatMessage {
   group     ChatGroup @relation(fields: [groupId], references: [id])
   groupId   String    @db.Uuid
   createdAt DateTime  @default(now())
-}
+} 
 
 model UserPresence {
   userId   Int     @id
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   isOnline Boolean @default(false)
 }
 

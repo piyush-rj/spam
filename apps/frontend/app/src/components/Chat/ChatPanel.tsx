@@ -18,7 +18,7 @@ interface Message {
 interface ChatPanelProps {
   groupId: string;
   groupName: string;
-
+  activeUsers: string[];
   sendMessage: (type: string, payload: any) => void;
   useSubscribe: (type: string, handler: (payload: any) => void) => void;
   subscribeToRoom: (roomId: string) => void;
@@ -36,6 +36,7 @@ export default function ChatPanel({
   unsubscribeFromRoom,
   isReady,
   connectionState,
+  activeUsers
 }: ChatPanelProps) {
 
 
@@ -62,7 +63,6 @@ export default function ChatPanel({
       user: currentUser.id,
     });
 
-    // Leave room on unmount
     return () => {
       sendMessage("chat:leave", {
         roomId: groupId,
@@ -72,7 +72,6 @@ export default function ChatPanel({
     };
   }, [groupId, currentUser.id, currentUser.name]);
 
-  // Subscribe to message events
   useSubscribe("chat:message", (msg: Message) => {
     setMessages((prev) => [...prev, msg]);
   });
@@ -125,13 +124,14 @@ export default function ChatPanel({
       </div>
     );
   }
+  console.log(`active users in: `, activeGroupId, `are`, activeUsers);
 
   return (
     <div className="flex flex-col h-full">
       <header className="border-b border-gray-700 p-4 flex justify-between items-center">
         <h2 className="text-xl font-semibold">{groupName}</h2>
         <div className="text-sm text-gray-400">
-          {users.length} user{users.length !== 1 ? "s" : ""}
+          {activeUsers} user{users.length !== 1 ? "s" : ""}
         </div>
       </header>
 

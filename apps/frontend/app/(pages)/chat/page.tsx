@@ -16,6 +16,7 @@ export default function Chat() {
   const { sendMessage, useSubscribe, subscribeToRoom, unsubscribeFromRoom, isReady, connectionState } = useSocket();
   const { setUserActive, setUserInactive } = useActiveUsersStore();
 
+
   useEffect(() => {
     if (!activeGroupId || !session?.user?.id) return;
 
@@ -27,6 +28,9 @@ export default function Chat() {
       setUserInactive(activeGroupId, session?.user?.id);
     }
   }, [activeGroupId, session?.user?.id])
+
+  const activeUsers = useActiveUsersStore((state) => activeGroupId ? state.activeUsers[activeGroupId] || [] : []);
+
 
   return (
     <div className="h-screen w-full pt-[80px] flex">
@@ -84,16 +88,17 @@ export default function Chat() {
         )}
 
         {activeTab === "chat" && activeGroupId && activeGroupName && (
-          <ChatPanel
-            groupId={activeGroupId}
-            groupName={activeGroupName}
-            sendMessage={sendMessage}
-            useSubscribe={useSubscribe}
-            subscribeToRoom={subscribeToRoom}
-            unsubscribeFromRoom={unsubscribeFromRoom}
-            isReady={isReady}
-            connectionState={connectionState}
-          />
+        <ChatPanel
+          groupId={activeGroupId}
+          groupName={activeGroupName}
+          sendMessage={sendMessage}
+          useSubscribe={useSubscribe}
+          subscribeToRoom={subscribeToRoom}
+          unsubscribeFromRoom={unsubscribeFromRoom}
+          isReady={isReady}
+          connectionState={connectionState}
+          activeUsers={activeUsers}
+        />
         )}
 
         {activeTab === "profile" && (

@@ -1,5 +1,5 @@
 {
-  "name": "100xApp",
+  "name": "spam",
   "private": true,
   "scripts": {
     "build": "turbo run build",
@@ -9,17 +9,12 @@
     "check-types": "turbo run check-types"
   },
   "devDependencies": {
-    "@types/uuid": "^10.0.0",
-    "prettier": "^3.5.3",
-    "turbo": "^2.5.0",
-    "typescript": "5.8.2"
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.4",
+    "typescript": "5.8.3"
   },
+  "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=18"
-  },
-  "packageManager": "npm@11.3.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ]
+  }
 }

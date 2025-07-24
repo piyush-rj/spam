@@ -2,7 +2,7 @@ import { Account, AuthOptions, ISODateString } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { JWT } from "next-auth/jwt";
 import axios from "axios";
-import { SIGNIN_URL } from "../../../../routes/api_routes";
+import { SIGNIN_URL } from "@/routes/api-routes";
 
 export interface UserType {
     id?: string | null;

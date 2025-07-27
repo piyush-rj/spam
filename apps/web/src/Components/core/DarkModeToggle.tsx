@@ -1,40 +1,23 @@
-"use client"
-import { useState, useEffect } from 'react';
+"use client";
+
 import { CiDark, CiLight } from "react-icons/ci";
-import ToolTipComponent from '@/src/utility/ToolTipComponent';
+import ToolTipComponent from "@/src/utility/ToolTipComponent";
+import { useThemeMode } from "@/src/store/useThemeStore"; // update path
 
 export default function DarkModeToggle() {
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const { theme, setTheme } = useThemeMode();
 
-    useEffect(() => {
-        const savedTheme = window.localStorage.getItem('theme');
-        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-        if (savedTheme) {
-            setIsDarkMode(savedTheme === 'dark');
-        } else {
-            setIsDarkMode(prefersDark);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (isDarkMode) {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-        }
-    }, [isDarkMode]);
+    const isDarkMode = theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
 
     const toggleTheme = () => {
-        setIsDarkMode(!isDarkMode);
+        setTheme(isDarkMode ? "light" : "dark");
     };
 
     return (
         <ToolTipComponent content="Switch theme">
             <div className="">
-                <button type='button'
+                <button
+                    type="button"
                     onClick={toggleTheme}
                     className="flex items-center gap-2 px-3 py-2 dark:bg-transparent bg-light-bas rounded-lg transition-all duration-200 transform hover:scale-105"
                 >

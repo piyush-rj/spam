@@ -1,12 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import DraggableComponent from "./DraggableComponent";
 import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { useRouter } from "next/navigation";
 import { useUserSessionStore } from "@/src/store/useUserSessionStore";
 import SignInModal from "@/src/utility/SignInModal";
+import RightAnimatedList from "./RightAnimatedList";
 
 export default function DisplayApp() {
     const containerRef = useRef(null);
@@ -94,14 +94,14 @@ export default function DisplayApp() {
                             onClick={handleGetStarted}
                             ref={buttonRef}
                             variant={"default"}
-                            className="text-[20px] font-light dark:bg-neutral-200 bg-black font-sans hover:-translate-y-0.5 transition-all transform duration-200"
+                            className="text-[18px] font-light dark:bg-neutral-200 bg-black font-sans hover:-translate-y-0.5 transition-all transform duration-200"
                         >
                             Get Started <span className="text-sm">{"->"}</span>
                         </Button>
                     </div>
                 </div>
                 <div ref={draggableRef} className="w-[30%] h-full border border-zinc-600 dark:border-zinc-800/50 rounded-3xl p-2 space-y-3">
-                    <DraggableComponent />
+                    <RightAnimatedList />
                 </div>
             </div>
 

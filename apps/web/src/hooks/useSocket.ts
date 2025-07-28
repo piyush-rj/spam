@@ -30,6 +30,7 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
 
 
     useEffect(() => {
+        console.log("inside socket");
         if (url && !clientRef.current) {
             clientRef.current = getWebSocketClient(url);
         } else if (!url && !clientRef.current) {
@@ -39,6 +40,8 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
                 console.error("ws-client not initialized", error);
             }
         }
+
+        console.log("ws connected");
     }, [url]);
 
 

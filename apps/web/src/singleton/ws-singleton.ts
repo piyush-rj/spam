@@ -4,6 +4,7 @@ import WebSocketClient from "../socket/socket.front";
 let wsClient: WebSocketClient | null = null;
 
 export const getWebSocketClient = (url?: string): WebSocketClient => {
+
     if (!wsClient && url) {
         wsClient = new WebSocketClient(url);
     }

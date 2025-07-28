@@ -29,7 +29,6 @@ export default async function authMiddleware(req: Request, res: Response, next: 
                 res.status(401).json({ message: "You are not authorized" });
                 return;
             }
-            req.user = decoded as AuthUser;
             next();
         })
     } catch (error) {

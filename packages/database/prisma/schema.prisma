@@ -13,6 +13,7 @@ model User {
   email     String   @unique
   name      String
   image     String?
+  username  String? @unique
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt @default(now())
 
@@ -29,7 +30,6 @@ model Room {
   description String?
   isPrivate   Boolean  @default(false)
   password    String? 
-  maxMembers  Int? 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 

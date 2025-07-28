@@ -43,6 +43,7 @@ export const AnimatedList = React.memo(
                     setIndex((prevIndex) => (prevIndex + 1) % childrenArray.length);
                 }, delay);
 
+                
                 return () => clearTimeout(timeout);
             }
         }, [index, delay, childrenArray.length]);

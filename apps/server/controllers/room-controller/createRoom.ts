@@ -2,17 +2,17 @@ import prisma from "@repo/database";
 import type { Request, Response } from "express";
 
 export default async function createRoom(req: Request, res: Response) {
-    const { userId, name, description, isPrivate, password, maxMembers } = req.body;
+    const { userId, name, description, isPrivate, password } = req.body;
 
     try {
         console.log("inside room creation");
+        console.log("req.body is: ", req.body);
         const room = await prisma.room.create({
             data: {
                 name,
                 description,
                 isPrivate,
                 password,
-                maxMembers,
                 owner: {
                     connect: { id: userId }
                 },

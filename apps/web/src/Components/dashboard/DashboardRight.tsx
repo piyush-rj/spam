@@ -27,7 +27,7 @@ export default function DashboardRight() {
     }
 
     return (
-        <div className="h-full w-[80%] border-r">
+        <div className="max-h-[90%] w-[80%] border-r">
             {handleRightSection()}
         </div>
 

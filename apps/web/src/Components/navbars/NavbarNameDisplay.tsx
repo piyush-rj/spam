@@ -6,6 +6,7 @@ import { useState, useRef, useEffect } from "react";
 import { gsap } from "gsap";
 import { BiLogOut } from "react-icons/bi";
 import LogoutModal from "@/src/utility/LogoutModal";
+import HeadingCard from "../dashboard/HeadingCard";
 
 export default function NavbarNameDisplay() {
     const { session } = useUserSessionStore();
@@ -60,8 +61,10 @@ export default function NavbarNameDisplay() {
             >
                 <div
                     onClick={() => setPanel((prev) => !prev)}
-                    className="flex items-center gap-2 px-3 py-1 rounded-full transition"
+                    className="flex items-center gap-2 px-3 space-x-3 py-1 rounded-full transition"
                 >
+                    <HeadingCard />
+
                     {session.user.image && (
                         <span className="h-8 w-8 rounded-full border overflow-hidden relative">
                             <Image

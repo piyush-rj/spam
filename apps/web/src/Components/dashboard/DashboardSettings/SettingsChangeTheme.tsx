@@ -1,11 +1,13 @@
 "use client";
 
+import { useSettingsRendererStore } from "@/src/store/useSettingsActiveStore";
 import { useThemeStore } from "@/src/store/useThemeStore";
 import ThemeCard from "@/src/utility/ThemeCard";
 import { MdLightMode, MdDarkMode, MdComputer } from "react-icons/md";
 
 export default function SettingsChangeTheme() {
     const { theme, setTheme } = useThemeStore();
+    const { value, setValue } = useSettingsRendererStore();
 
     return (
         <div className="w-full h-full flex flex-col justify-start items-start pt-10">

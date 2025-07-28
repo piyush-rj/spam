@@ -1,5 +1,6 @@
 import { authOptions } from "@/app/api/auth/[...nextauth]/options";
-import SessionProvider from "@/src/utility/SessionProvider";
+import SessionProvider from "@/src/providers/SessionProvider";
+import { WebSocketProvider } from "@/src/providers/WSProvider";
 import { getServerSession } from "next-auth";
 import React from "react"
 
@@ -9,10 +10,13 @@ interface LayoutProps {
 
 export default async function Layout({ children }: LayoutProps) {
     const session = await getServerSession(authOptions);
+
     return (
         <div>
-            {children}
-            <SessionProvider session={session} />
+            <WebSocketProvider url={process.env.NEXTAUTH_PUBLIC_WS_URL!}>
+                {children}
+                <SessionProvider session={session} />
+            </WebSocketProvider>
         </div>
     )
 }

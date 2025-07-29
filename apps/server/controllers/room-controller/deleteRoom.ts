@@ -2,7 +2,7 @@ import prisma from "@repo/database";
 import type { Request, Response } from "express";
 
 export default async function deleteRoom(req: Request, res: Response) {
-    const { roomId } = req.params;
+    const { roomId } = req.body;
 
     try {
         await prisma.room.delete({

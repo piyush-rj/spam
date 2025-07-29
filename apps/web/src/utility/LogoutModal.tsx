@@ -2,7 +2,6 @@
 
 import { Dispatch, SetStateAction } from "react";
 import BlurBG from "./BlurBG";
-import SignInCard from "./SignInCard";
 import LogoutCard from "./LogoutCard";
 
 interface LoginModalProps {
@@ -10,10 +9,7 @@ interface LoginModalProps {
     setOpeLogoutModal: Dispatch<SetStateAction<boolean>>;
 }
 
-export default function LogoutModal({
-    opeLogoutModal,
-    setOpeLogoutModal,
-}: LoginModalProps) {
+export default function LogoutModal({ opeLogoutModal, setOpeLogoutModal }: LoginModalProps) {
     if (!opeLogoutModal) return null;
 
     return (

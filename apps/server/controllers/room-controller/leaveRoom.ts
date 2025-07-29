@@ -2,15 +2,15 @@ import prisma from "@repo/database";
 import type { Request, Response } from "express";
 
 export default async function leaveRoom(req: Request, res: Response) {
-    const { userId } = req.body;
-    const { roomId } = req.params;
+    const { roomId, userId } = req.body;
+
 
     try {
         await prisma.roomMember.delete({
             where: {
                 userId_roomId: {
-                    userId: userId,
-                    roomId: String(roomId),
+                    userId: String(userId),
+                    roomId: roomId,
                 }
             }
         })

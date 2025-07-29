@@ -3,19 +3,30 @@
 import { useEffect, useState } from "react";
 import { useUserSessionStore } from "../store/useUserSessionStore";
 import axios from "axios";
-import { GET_ROOM_URL, JOIN_ROOM_URL } from "@/routes/api-routes";
+import { GET_ROOM_URL } from "@/routes/api-routes";
 import RoomCard from "./RoomCard";
 import { Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import JoinRoomModal from "./JoinRoomModal";
 
 interface Room {
     id: string;
     name: string;
     description: string;
+    isPrivate: boolean;
     owner: {
         id: string;
         name: string;
+    };
+}
+
+interface RoomCheckResponse {
+    room: {
+        id: string;
+        name: string;
+        description: string;
+        isPrivate: boolean;
     };
 }
 
@@ -24,21 +35,25 @@ export default function RoomDisplayCard() {
     const [ownedRooms, setOwnedRooms] = useState<Room[]>([]);
     const [joinedRooms, setJoinedRooms] = useState<Room[]>([]);
     const [loading, setLoading] = useState(true);
-    const [showJoinPanel, setShowJoinPanel] = useState(false);
-    const [joinRoomId, setJoinRoomId] = useState("");
+
+    // Join room states
+    const [showJoinPanel, setShowJoinPanel] = useState<boolean>(false);
+    const [inputRoomId, setInputRoomId] = useState<string>("");
+    const [roomCheckError, setRoomCheckError] = useState<string | null>(null);
+    const [selectedRoom, setSelectedRoom] = useState(null);
+        useState<RoomCheckResponse["room"] | null>(null);
+    const [showJoinModal, setShowJoinModal] = useState(false);
 
     useEffect(() => {
         const fetchRooms = async () => {
             if (!session?.user.id) return;
 
             try {
-                const response = await axios.get(`${GET_ROOM_URL}`, {
-                    params: {
-                        userId: session.user.id
-                    },
+                const response = await axios.get(GET_ROOM_URL, {
+                    params: { userId: session.user.id },
                     headers: {
-                        Authorization: `Bearer ${session.user.token}`
-                    }
+                        Authorization: `Bearer ${session.user.token}`,
+                    },
                 });
 
                 const { ownedRooms, joinedRooms } = response.data;
@@ -60,37 +75,42 @@ export default function RoomDisplayCard() {
         fetchRooms();
     }, [session?.user.id]);
 
-    const handleJoinRoom = async () => {
-        if (!joinRoomId) return;
-        try {
-            const response = await axios.post(`${JOIN_ROOM_URL}`, {
-                userId: session?.user.id,
-                roomId: joinRoomId,
-            },
-                {
-                    headers: {
-                        Authorization: `Bearer ${session?.user.token}`,
-                    },
-                }
-            );
-            console.log("Joined room:", response.data);
-            setJoinRoomId("");
-            setShowJoinPanel(false);
-        } catch (error) {
-            console.error("Failed to join room:", error);
-        }
-    };
-
-    if (loading) {
-        return <p className="text-center text-muted-foreground">Loading rooms...</p>;
+    const handleJoinClick = () => {
+        console.log(session?.user.token)
+        console.log("isnide handle join")
+        setShowJoinModal(true)
     }
+
+    const handleJoinSuccess = () => {
+        setShowJoinModal(false);
+        setSelectedRoom(null);
+        setInputRoomId("");
+        setShowJoinPanel(false);
+        setRoomCheckError(null);
+    };
 
     const allRooms = [...ownedRooms, ...joinedRooms];
 
     return (
         <div className="w-full mx-auto flex flex-col h-[600px]">
 
-            <div className="flex-1 overflow-y-auto space-y-4 pr-1  scrollbar-hide ">
+            <div className="mb-4 space-y-2 px-0.5">
+                <div
+                    onClick={() => {
+                        setShowJoinPanel(true);
+                        setInputRoomId("");
+                        setRoomCheckError(null);
+                    }}
+                    className="cursor-pointer font-mono flex items-center justify-between border dark:border-[#3593b8] bg-[#00161a] rounded-xl p-4 hover:bg-[#00161ad8] transition"
+                >
+                    <div onClick={handleJoinClick} className="w-full flex items-center justify-center gap-2">
+                        <Plus className="w-5 h-5 dark:text-[#3593b8]" />
+                        <span className="font-medium dark:text-[#3593b8]">JOIN A ROOM</span>
+                    </div>
+                </div>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-4 pr-1 scrollbar-hide">
                 {allRooms.length > 0 ? (
                     allRooms.map((room) => (
                         <RoomCard
@@ -98,6 +118,7 @@ export default function RoomDisplayCard() {
                             name={room.name}
                             description={room.description}
                             isOwner={room.owner.id === session?.user.id}
+                            roomId={room.id}
                         />
                     ))
                 ) : (
@@ -107,31 +128,15 @@ export default function RoomDisplayCard() {
                 )}
             </div>
 
-            <div className="mt-4">
-                <div
-                    onClick={() => setShowJoinPanel(!showJoinPanel)}
-                    className="cursor-pointer flex items-center justify-between border-2 border-[#70810fd5] border-dashed rounded-xl p-4 bg-muted/30 hover:bg-neutral-900/80 transition"
-                >
-                    <div className="flex items-center gap-2">
-                        <Plus className="w-5 h-5 text-primary" />
-                        <span className="font-medium text-primary">Join a Room</span>
-                    </div>
-                </div>
 
-                {showJoinPanel && (
-                    <div className="mt-4 border border-muted rounded-xl p-4 bg-background space-y-4">
-                        <Input
-                            placeholder="Enter Room ID"
-                            value={joinRoomId}
-                            onChange={(e) => setJoinRoomId(e.target.value)}
-                            className="w-full"
-                        />
-                        <Button className="w-full" onClick={handleJoinRoom}>
-                            Join Room
-                        </Button>
-                    </div>
-                )}
-            </div>
+
+            {showJoinModal && (
+                <JoinRoomModal
+                    isOpen={showJoinModal}
+                    setIsOpen={setShowJoinModal}
+                    onJoinSuccess={handleJoinSuccess}
+                />
+            )}
         </div>
     );
 }

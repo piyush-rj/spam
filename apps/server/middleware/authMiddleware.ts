@@ -24,7 +24,7 @@ export default async function authMiddleware(req: Request, res: Response, next: 
     }
 
     try {
-        jwt.verify(token, secret, (err, decoded) => {
+        jwt.verify(token, secret, (err) => {
             if(err) {
                 res.status(401).json({ message: "You are not authorized" });
                 return;

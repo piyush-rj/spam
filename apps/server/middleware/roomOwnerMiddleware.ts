@@ -2,8 +2,8 @@ import prisma from "@repo/database";
 import type { NextFunction, Request, Response } from "express";
 
 export default async function roomOwnerMiddleware(req: Request, res: Response, next: NextFunction) {
-    const userId = req.headers['x-user-id'] as string;
-    const roomId = req.params.roomId;
+    const { userId } = req.headers;
+    const { roomId } = req.headers;
 
     try {
         if (!userId) {
@@ -13,7 +13,7 @@ export default async function roomOwnerMiddleware(req: Request, res: Response, n
 
         const room = await prisma.room.findUnique({
             where: {
-                id: roomId
+                id: String(roomId)
             }
         })
 

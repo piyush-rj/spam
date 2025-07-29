@@ -9,6 +9,7 @@ import leaveRoom from "../controllers/room-controller/leaveRoom";
 import getRoom from "../controllers/room-controller/getRoom";
 import createUsername from "../controllers/user-controller/createUsername";
 import getUsername from "../controllers/user-controller/getUsername";
+import getRoomCheck from "../controllers/room-controller/getRoomCheck";
 
 const router = Router();
 
@@ -22,10 +23,12 @@ router.get('/get-username', authMiddleware, getUsername);
 
 // room-controllers
 router.post("/room/create-room", authMiddleware, createRoom);
-router.post("/room/join-room/:id", authMiddleware, joinRoom);
-router.delete("/room/delete-room/:id", authMiddleware, roomOwnerMiddleware, deleteRoom);
-router.post("/room/leave-room/:id", authMiddleware, leaveRoom);
-router.get("/rooms/list-rooms/:id", authMiddleware, getRoom)
+router.post("/room/join-room", authMiddleware, joinRoom);
+router.delete("/room/leave-room", authMiddleware, leaveRoom);
+router.delete("/room/delete-room", authMiddleware, deleteRoom);
+
+router.get("/rooms/list-rooms/:id", authMiddleware, getRoom);
+router.get('/rooms/get-room-check/:roomId', authMiddleware, getRoomCheck);
 
 
 

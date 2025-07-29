@@ -21,7 +21,7 @@ export default function DashboardAccessComponent({
             <span
                 className={`text-[20px] ${isActive
                         ? "text-[#e5ff52d5]"
-                        : "text-neutral-800 dark:text-zinc-300/90 group-hover:dark:text-[#e5ff52d5]"
+                        : "text-neutral-800 dark:text-zinc-300/90"
                     }`}
             >
                 {logo}
@@ -29,7 +29,7 @@ export default function DashboardAccessComponent({
             <span
                 className={`text-[16px] font-medium ${isActive
                         ? "text-[#e5ff52d5]"
-                        : "text-neutral-800 dark:text-zinc-300/90 group-hover:dark:text-[#e5ff52d5]"
+                        : "text-neutral-800 dark:text-zinc-300/90"
                     }`}
             >
                 {title}

@@ -1,12 +1,14 @@
-import { WebSocketServer, type Server } from "ws";
+import { WebSocketServer } from "ws";
 import WebSocket from "ws";
 import { IncomingMessageType, type SocketType } from "./socket.types";
+import type { Server as HTTPServer } from "http";
+
 
 class WebSocketClass {
     private wss: WebSocketServer;
     private wsSubscription: Map<string, Set<WebSocket>>;
 
-    constructor(server: import("http").Server) {
+    constructor(server: HTTPServer) {
         this.wss = new WebSocketServer({ server });
         this.wsSubscription = new Map();
         this.init();
@@ -24,6 +26,7 @@ class WebSocketClass {
         });
     }
 
+
     private handleMessage(message: string, socket: WebSocket) {
         try {
             const socketMessage: SocketType = JSON.parse(message);
@@ -37,6 +40,18 @@ class WebSocketClass {
 
                 case IncomingMessageType.CHAT:
                     return this.handleChat(socketMessage, socket);
+
+                case IncomingMessageType.ROOM_CREATED:
+                    return this.broadcastGlobal(socketMessage);
+
+                case IncomingMessageType.ROOM_DELETED:
+                    return this.broadcastGlobal(socketMessage);
+
+                case IncomingMessageType.ROOM_JOINED:
+                    return this.broadcastGlobal(socketMessage);
+
+                case IncomingMessageType.ROOM_LEFT:
+                    return this.broadcastGlobal(socketMessage);
 
                 default:
                     return;
@@ -152,6 +167,17 @@ class WebSocketClass {
             stats.set(roomId, sockets.size);
         });
         return stats;
+    }
+
+
+    private broadcastGlobal(message: SocketType) {
+        const payload = JSON.stringify(message);
+
+        this.wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(payload)
+            }
+        })
     }
 }
 

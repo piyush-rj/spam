@@ -1,0 +1,25 @@
+use anchor_lang::prelude::*;
+use crate::state::Counter;
+use crate::errors::error_codes::CounterError;
+
+#[derive(Accounts)]
+pub struct UpdateCounter<'info> {
+    #[account(
+        mut,
+        has_one = owner, // Ensure the signer is the owner of the counter
+        seeds = [b"counter", owner.key().as_ref()],
+        bump = counter.bump
+    )]
+    pub counter: Account<'info, Counter>,
+    #[account(mut)]
+    pub owner: Signer<'info>, // The owner of the counter account
+}
+
+pub fn handler(ctx: Context<UpdateCounter>) -> Result<()> {
+    let counter = &mut ctx.accounts.counter;
+    if counter.count == 0 {
+        return err!(CounterError::CountUnderflow);
+    }
+    counter.count = counter.count.checked_sub(1).unwrap();
+    Ok(())
+}
